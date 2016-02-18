@@ -1,0 +1,233 @@
+<!-- Example URL:
+http://madita/MyCoins/html/app.html
+https://rawgit.com/chelaz/MyCoins/master/html/app.html
+-->
+
+<!--
+  Documenation
+-->
+
+
+<!DOCTYPE html>
+<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+<html>
+  <div id="CommitNumber" hidden> 1 </div>
+  <head>
+  <title>MyCoins - Exchange between BTC and LTC</title>
+  <link rel='stylesheet' type='text/css' href='css/slate.css'>
+  <!--script src='js/slate.js'></script-->
+  <style>
+  .title {
+    padding: 15px 5px;
+    font-family: 'PT Sans', sans-serif;
+    color: #888888;
+    text-align: center;
+  }
+  .subtitle {
+    padding: 5px 5px;
+    font-family: 'PT Sans', sans-serif;
+    font-size: 1em;
+    font-weight: 500;
+    color: #888888;
+    text-align: center;
+  }
+  </style>
+  </head>
+
+  <body>
+    <h1 class='title'><a href="http://www.chelaz.de/WristFHEM">MyCoins</a></h1>
+    <h1 class='subtitle'>Exchange between BTC and LTC</h1>
+
+    <div class='item-container'>
+      <div class='item-container-header'>Server Configuration</div>
+      <div class='item-container-content'>
+        <label class='item'>
+          Server URL
+          <input id='FHEM_SERVER_URL' type='text' value='http://localhost:8083/fhem'>
+        </label>
+        <label class='item'>
+          Room Filter
+          <input id='FHEM_ROOM_FILTER' type='text' value='Pebble'>
+        </label>
+      </div>
+      <div class='item-container-footer'>
+<p>
+	Please specify <a href="http://www.fhem.de">FHEM</a> server URL. Note https is not yet supported as well
+	as username/password access. Example: <em>http://www.myfhem.org:8083/fhem</em>.</p>
+<p>Optionally you can specify a
+room. All devices are filtered by this room after requesting the new devices
+from your watch.</p>
+      <div align=right><input id='reset_button'  type='button' class='item-button-small' value='Reset'>
+      </div>
+     </div>    
+    </div>
+
+    <div class='item-container'>
+      <div class='item-container-header' id="FHEMDevices_header">FHEM Devices</div>
+      <div class='item-container-content'>
+        <div id="FHEMDevices">...</div>
+      </div>
+      <div class='item-container-footer'>
+	You can see all (filtered) devices of your FHEM server.
+      </div>
+    </div>
+
+    <div class='item-container'>
+      <div class='button-container'>
+        <input id='submit_button' type='button' class='item-button' value='SUBMIT'>
+      </div>
+    </div>
+    <!-- DEBUG_CONSOLE -->
+    <div class='item-container'>
+      <div class='item-container-header'>Debug Console</div>
+      <div class='item-container-footer'><ul id="Console"><li>Status: Ready</li></ul>
+      </div>
+    </div>
+  </body>
+  
+  
+  <!-- --------------------------------------------------------------------------------------------------
+  	javascript starts here -->
+  <script>
+  
+  var Debug=true;
+  
+  
+  
+  ////////////////////////////////////
+  // General Helper Functions
+
+  // Set the return URL depending on the runtime environment
+  
+  function getQueryParam(variable, defaultValue) {
+    var query = location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+      var pair = vars[i].split('=');
+      if (pair[0] === variable) {
+        return decodeURIComponent(pair[1]);
+      }
+    }
+    return defaultValue || false;
+  }
+
+  // Extract the args from the URI of this document
+  // Returns the string corresponding to the given key
+  // Example: var optionsString = getQueryString("options", "foobar");  // for "URL=https://localhost/index.html?options=FOOBAR"
+  function getQueryString(key, default_) {
+	  if (default_ == null) default_ = "";
+	  key = key.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+	  var regex = new RegExp("[\\?&]" + key + "=([^&#]*)");
+	  var qs = regex.exec(window.location.href);
+	  if (qs == null)
+	    return default_;
+	  else
+	    return decodeURIComponent(qs[1]);
+  }
+
+  /////////////////////////////////////
+  // Submit button clicked 
+  var submitButton = document.getElementById('submit_button');
+  submitButton.addEventListener('click', function() {
+    console.log('Submit');
+
+    var ReturnString = JSON.stringify(getInputMain());
+
+    MyConsole("Submit: "+ ReturnString);
+
+    if (Debug)
+      return;
+
+    // var return_to = getQueryParam('return_to', 'pebblejs://close#');
+    // document.location = return_to + encodeURIComponent(ReturnString);
+  });
+
+  function MyConsole(text)
+  {
+    // DEBUG_CONSOLE
+    var Console = document.getElementById('Console');
+    Console.innerHTML += "<li>" + text + "</li>";
+  }
+
+  // -----------------------------------------------------
+  // Read data from HTML Input
+
+  function GetInputServerURL(return_opts)
+  {
+    var FHEM_SERVER_URL_textinput = document.getElementById('FHEM_SERVER_URL');
+    return_opts['FHEM_SERVER_URL'] = FHEM_SERVER_URL_textinput.value;
+
+    var FHEM_ROOM_FILTER_textinput = document.getElementById('FHEM_ROOM_FILTER');
+    return_opts['FHEM_ROOM_FILTER'] = FHEM_ROOM_FILTER_textinput.value;
+
+    // Save for next launch
+    localStorage['FHEM_SERVER_URL']  = return_opts['FHEM_SERVER_URL'];
+    localStorage['FHEM_ROOM_FILTER'] = return_opts['FHEM_ROOM_FILTER'];
+
+    return return_opts;
+  }
+
+
+  // Input main function
+  function getInputMain() {
+
+    var FHEM_Config = {}
+
+    FHEM_Config = GetInputServerURL(FHEM_Config);    
+    FHEM_Config = GetInputDevices(FHEM_Config, DeviceType);
+
+    var FHEM_Config_Str = JSON.stringify(FHEM_Config);
+
+    MyConsole("FHEM_Config: " + FHEM_Config_Str);
+
+    localStorage["FHEM_Config"] = FHEM_Config_Str;
+
+    return FHEM_Config;
+  }
+
+
+  // -----------------------------------------------------
+  // ...
+
+
+  /////////////////////////////////////
+  // Helper Functions
+
+
+  /////////////////////////////////////
+  // Main Function
+  (function() {
+    var Cnt = 0;
+    var CntObj = localStorage['FHEM_CONFIG_CNT'];
+    if (CntObj == null) {
+      localStorage['FHEM_CONFIG_CNT'] = JSON.stringify(Cnt);
+    } else {
+      Cnt = JSON.parse(CntObj);
+      localStorage['FHEM_CONFIG_CNT'] = JSON.stringify(Cnt+1);
+    }
+    MyConsole("Config Counter: " + localStorage['FHEM_CONFIG_CNT']);
+    
+    var TagCommitNumber = document.getElementById('CommitNumber');
+    MyConsole("Commit: "+ TagCommitNumber.innerHTML);
+     
+    // Server URL
+    var FHEM_SERVER_URL_textinput = document.getElementById('FHEM_SERVER_URL');
+    // Load any previously saved configuration, if available
+    if(localStorage['FHEM_SERVER_URL']) {
+      FHEM_SERVER_URL_textinput.value = localStorage['FHEM_SERVER_URL'];
+    }
+
+
+    // for debugging: if args of URI are not present, the URI stays
+    var DevicesElement=document.getElementById('FHEMDevices');
+    if (Debug)
+      DevicesElement.innerHTML = "URL of this document: <em>" +
+        window.location.href + "</em>";
+    else
+      DevicesElement.innerHTML = "Go to settings on watch and press <em>Request</em>. Then return to this page to edit FHEM devices.";
+
+    DeviceType = "FS20";
+
+  })();
+  </script>
+</html>
