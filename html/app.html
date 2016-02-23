@@ -125,13 +125,42 @@ from your watch.</p>
 	    return decodeURIComponent(qs[1]);
   }
 
+  function HTTPGET(url)
+  {
+    var req = new XMLHttpRequest();
+    req.open("GET", url, false);
+    req.send(null);
+    return req.responseText;
+  }
+
+  function Request(url)
+  {
+    var nonce = 1;
+    var NonceObj = localStorage['Nonce'];
+    if (NonceObj == null) {
+      localStorage['Nonce'] = JSON.stringify(nonce);
+    } else {
+      nonce = JSON.parse(NonceObj);
+      localStorage['Nonce'] = JSON.stringify(nonce+1);
+    }
+    MyConsole("Nonce: " + localStorage['Nonce']);
+
+    var response = HTTPGET(url);
+    
+    if (response !== null) {
+      MyConsole(response);
+    }
+
+
   /////////////////////////////////////
   // Submit button clicked 
   var submitButton = document.getElementById('submit_button');
   submitButton.addEventListener('click', function() {
     console.log('Submit');
 
-    var ReturnString = JSON.stringify(getInputMain());
+    // var ReturnString = JSON.stringify(getInputMain());
+
+    Request("https://btc-e.com/tapi");
 
     MyConsole("Submit: "+ ReturnString);
 
