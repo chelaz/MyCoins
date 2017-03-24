@@ -1,0 +1,4 @@
+https://github.com/CodeReclaimers/btce-bot/wiki/Getting-started
+
+1. sudo python2 setup.py install for btce-api and btce-bot
+2. create keys on btc-e.com 
