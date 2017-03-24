@@ -59,39 +59,18 @@ class MyRich:
         T=self.__A.get_param3(couple, method='trades', param="limit=3000")
 
         cnt=0
-        for v in T[MyCouple]:
+        for v in T[couple]:
            print ("%4d: " % cnt, end='')
            Time=MyTime(v['timestamp'])
            print(Time.str(), end='')
            print(v)
            cnt+=1
 
-#A=api(api_key=Keys.Key, api_secret=Keys.Secret)
-
-#Info=A.getInfo()
-
-#print("Info:")
-#print(Info)
-#print("------------------------")
-
-#SrvTm = MyTime(Info['return']['server_time'])
-#print(SrvTm.str())
-
 BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
 EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
 
-print("Begin and End Day: %s - %s" % (BeginDay, EndDay))
+#print("Begin and End Day: %s - %s" % (BeginDay, EndDay))
 
-History=None
-#History=A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
-#print(History)
-
-if (History and History['success']):
-    Ret=History['return']
-    for v in Ret:
-        TransTime=MyTime((Ret[v]['timestamp']))
-        print(TransTime.str(), end='')
-        print(Ret[v])
 
 R = MyRich(Keys)
 
@@ -102,22 +81,5 @@ R.TransHist(BeginDay, EndDay)
 #TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
 #print(TradeHist)
 
-#param="trades"
-print("Trades:")
-MyCouple="dsh_btc"
-
-R.PublicTrades(MyCouple)
-
-#Trades=A.get_param3(couple=MyCouple, method='trades', param="limit=3000")
-#Trades=A.get_param3(couple="btc_usd", method='trades')
-#print(Trades)
-
-#cnt=0
-#for v in Trades[MyCouple]:
-#    print ("%4d: " % cnt, end='')
-#    Time=MyTime(v['timestamp'])
-#    print(Time.str(), end='')
-#    print(v)
-#    cnt+=1
-#
+R.PublicTrades("dsh_btc")
 
