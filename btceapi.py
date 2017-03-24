@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 ## Author:      t0pep0
 ## e-mail:      t0pep0.gentoo@gmail.com
@@ -48,6 +49,19 @@ class api:
  def get_param(self, couple, param):
   conn = http.client.HTTPSConnection("btc-e.com")
   conn.request("GET", "/api/2/"+couple+"/"+param)
+  response = conn.getresponse().read().decode()
+  data = json.loads(response)
+  conn.close()
+  return data
+ 
+ def get_param3(self, couple, method, param=''):
+  conn = http.client.HTTPSConnection("btc-e.com")
+  print("/api/3/"+method+"/"+couple+"?"+param)
+  if param == '':
+    conn.request("GET", "/api/3/"+method+"/"+couple)
+  else:
+    conn.request("GET", "/api/3/"+method+"/"+couple+"?"+param)
+  
   response = conn.getresponse().read().decode()
   data = json.loads(response)
   conn.close()
