@@ -36,15 +36,18 @@ EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
 
 print("Begin and End Day: %s - %s" % (BeginDay, EndDay))
 
+History=None
 History=A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
-
 #print(History)
 
-if (History['success']):
+if (History and History['success']):
     Ret=History['return']
     for v in Ret:
         TransTime=MyTime((Ret[v]['timestamp']))
         print(TransTime.str(), end='')
         print(Ret[v])
+
+#TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
+#print(TradeHist)
 
 
