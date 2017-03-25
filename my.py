@@ -148,6 +148,10 @@ class MyRich:
 #      f.write(json.dumps(v, indent=2))
     f.close()
    
+###########################################################################
+
+StartTime=datetime.datetime.now().timestamp()
+
 
 BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
 EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
@@ -171,12 +175,21 @@ R.Info()
 R.LoadList()
 
 R.RecPublicTrades("dsh_btc")
+R.RecPublicTrades("dsh_eur")
+R.RecPublicTrades("dsh_usd")
 R.RecPublicTrades("btc_usd")
 R.RecPublicTrades("btc_eur")
 R.RecPublicTrades("eth_btc")
+R.RecPublicTrades("eth_eur")
+R.RecPublicTrades("eth_usd")
 
 #R.PrintPublicTrades()
 
 R.SaveList()
+
+EndTime=datetime.datetime.now().timestamp()
+
+print("%d seconds" % (EndTime-StartTime))
+print("=============================================================================")
 
 
