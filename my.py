@@ -37,6 +37,9 @@ class MyTime:
   def strDay(self):
     return self.__datetime.strftime('%Y-%m-%d')
 
+  def strWeek(self):
+    return self.__datetime.strftime('%Y-%W')
+
 
 class MyRich:
   __A = None
@@ -120,7 +123,7 @@ class MyRich:
     I=self.__A.getInfo()
     #print(I)
     SrvTm = MyTime(I['return']['server_time'])
-    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strDay())
+    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strWeek())
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
@@ -135,7 +138,7 @@ class MyRich:
   def SaveList(self):
     I=self.__A.getInfo()
     SrvTm = MyTime(I['return']['server_time'])
-    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strDay())
+    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strWeek())
     print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
 
     f=open(FileName, "w")
