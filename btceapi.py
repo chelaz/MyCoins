@@ -56,7 +56,7 @@ class api:
  
  def get_param3(self, couple, method, param=''):
   conn = http.client.HTTPSConnection("btc-e.com")
-  print("/api/3/"+method+"/"+couple+"?"+param)
+  #print("/api/3/"+method+"/"+couple+"?"+param)
   if param == '':
     conn.request("GET", "/api/3/"+method+"/"+couple)
   else:

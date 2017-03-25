@@ -18,6 +18,8 @@
 #1999: {'type': 'ask', 'price': 963.253, 'amount': 0.3754092, 'tid': 95986030, 'timestamp': 1490389511}
 
 import datetime
+import json
+import os.path
 
 from btceapi import api
 from Keys import Keys
@@ -32,13 +34,17 @@ class MyTime:
   def str(self):
     return self.__datetime.strftime('%Y-%m-%d %H:%M:%S')
 
+  def strDay(self):
+    return self.__datetime.strftime('%Y-%m-%d')
+
 
 class MyRich:
   __A = None
   __L = []
+  __V = 0 # File Version
 
   def __init__(self, Keys):
-    self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret)
+    self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
 
   def Info(self):
     I=self.__A.getInfo()
@@ -50,7 +56,7 @@ class MyRich:
         print("    %s: %s" % (v, Ret[v]))
     SrvTm = MyTime(I['return']['server_time'])
     print("  Server Time: "+SrvTm.str())
-    print("------------------------")
+    print("-----------------------------------------")
   def TransHist(self, BeginDay, EndDay):
     History=self.__A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
     #print(History)
@@ -63,7 +69,7 @@ class MyRich:
         print(Ret[v])
 
   def PublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=10")
+    T=self.__A.get_param3(couple, method='trades', param="limit=100")
 
     cnt=0
     for v in T[couple]:
@@ -77,20 +83,28 @@ class MyRich:
     return item[0]
 
   def _BuildTuple(v, couple):
-    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
+    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
+#    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
+
 
   def RecPublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=10")
+    T=self.__A.get_param3(couple, method='trades', param="limit=2000")
 
+    cnt=0
     for v in T[couple]:
       Tuple = MyRich._BuildTuple(v, couple)
       if not Tuple in self.__L:
         self.__L.append(Tuple)
+      else:
+        cnt+=1
       #else:
       #  print("Tuple already in list: ", end='')
       #  print(v)
-      
-      self.__L=sorted(self.__L, key=self._SortByTimestamp)
+    
+    if cnt > 0:
+      print("  %d tuples already exist in list" % cnt)
+        
+    self.__L=sorted(self.__L, key=self._SortByTimestamp)
  
 
   def PrintPublicTrades(self):
@@ -99,8 +113,38 @@ class MyRich:
     #print(SortedList)
 
     for v in self.__L:
+      print("  ", end='')
       print(v)
 
+  def LoadList(self):
+    I=self.__A.getInfo()
+    #print(I)
+    SrvTm = MyTime(I['return']['server_time'])
+    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strDay())
+    print("Loading data from "+FileName, end='', flush=True) 
+    if not os.path.isfile(FileName):
+      print(" ..does not exist. Aborted.")
+      return
+
+    with open(FileName, "r") as ins:
+      for line in ins:
+        self.__L.append(json.loads(line))
+
+    print(" ..loaded %d entries" % len(self.__L))
+ 
+  def SaveList(self):
+    I=self.__A.getInfo()
+    SrvTm = MyTime(I['return']['server_time'])
+    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strDay())
+    print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
+
+    f=open(FileName, "w")
+    for v in self.__L:
+      f.write(json.dumps(v))
+      f.write("\n")
+#      f.write(json.dumps(v, indent=2))
+    f.close()
+   
 
 BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
 EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
@@ -112,18 +156,24 @@ R = MyRich(Keys)
 
 R.Info()
 
-R.TransHist(BeginDay, EndDay)
+#BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
+#EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
+#R.TransHist(BeginDay, EndDay)
 
 #TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
 #print(TradeHist)
 
 #R.PublicTrades("dsh_btc")
 
+R.LoadList()
+
 R.RecPublicTrades("dsh_btc")
 R.RecPublicTrades("btc_usd")
 R.RecPublicTrades("btc_eur")
 R.RecPublicTrades("eth_btc")
-R.PrintPublicTrades()
 
+#R.PrintPublicTrades()
+
+R.SaveList()
 
 
