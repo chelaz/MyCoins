@@ -35,21 +35,22 @@ class MyTime:
 
 class MyRich:
   __A = None
+  __L = []
 
   def __init__(self, Keys):
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret)
 
   def Info(self):
     I=self.__A.getInfo()
-    print("Info:")
-    print(I)
+    print("Info:\n  Balance:")
+    #print(I)
     Ret=I['return']['funds']
     for v in Ret:
-        print("%s: %s" % (v, Ret[v]))
-    print("------------------------")
+      if Ret[v] > 0:
+        print("    %s: %s" % (v, Ret[v]))
     SrvTm = MyTime(I['return']['server_time'])
-    print(SrvTm.str())
-
+    print("  Server Time: "+SrvTm.str())
+    print("------------------------")
   def TransHist(self, BeginDay, EndDay):
     History=self.__A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
     #print(History)
@@ -62,7 +63,7 @@ class MyRich:
         print(Ret[v])
 
   def PublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=3000")
+    T=self.__A.get_param3(couple, method='trades', param="limit=10")
 
     cnt=0
     for v in T[couple]:
@@ -72,9 +73,33 @@ class MyRich:
       print(v)
       cnt+=1
 
-  def SavePublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=3000")
-    
+  def _SortByTimestamp(self, item):
+    return item[0]
+
+  def _BuildTuple(v, couple):
+    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
+
+  def RecPublicTrades(self, couple):
+    T=self.__A.get_param3(couple, method='trades', param="limit=10")
+
+    for v in T[couple]:
+      Tuple = MyRich._BuildTuple(v, couple)
+      if not Tuple in self.__L:
+        self.__L.append(Tuple)
+      #else:
+      #  print("Tuple already in list: ", end='')
+      #  print(v)
+      
+      self.__L=sorted(self.__L, key=self._SortByTimestamp)
+ 
+
+  def PrintPublicTrades(self):
+    #print (self.__L)
+    #SortedList=sorted(self.__L, key=self._SortByTimestamp)
+    #print(SortedList)
+
+    for v in self.__L:
+      print(v)
 
 
 BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
@@ -92,5 +117,13 @@ R.TransHist(BeginDay, EndDay)
 #TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
 #print(TradeHist)
 
-R.PublicTrades("dsh_btc")
+#R.PublicTrades("dsh_btc")
+
+R.RecPublicTrades("dsh_btc")
+R.RecPublicTrades("btc_usd")
+R.RecPublicTrades("btc_eur")
+R.RecPublicTrades("eth_btc")
+R.PrintPublicTrades()
+
+
 
