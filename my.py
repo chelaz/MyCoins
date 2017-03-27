@@ -91,7 +91,7 @@ class MyRich:
 
 
   def RecPublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=2000")
+    T=self.__A.get_param3(couple, method='trades', param="limit=10")
 
     cnt=0
     for v in T[couple]:
@@ -176,12 +176,12 @@ R.LoadList()
 
 R.RecPublicTrades("dsh_btc")
 R.RecPublicTrades("dsh_eur")
-R.RecPublicTrades("dsh_usd")
-R.RecPublicTrades("btc_usd")
-R.RecPublicTrades("btc_eur")
+#R.RecPublicTrades("dsh_usd")
+#R.RecPublicTrades("btc_usd")
+#R.RecPublicTrades("btc_eur")
 R.RecPublicTrades("eth_btc")
 R.RecPublicTrades("eth_eur")
-R.RecPublicTrades("eth_usd")
+#R.RecPublicTrades("eth_usd")
 
 #R.PrintPublicTrades()
 
