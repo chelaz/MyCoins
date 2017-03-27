@@ -88,10 +88,20 @@ class MyRich:
   def _SortByTimestamp(self, item):
     return item[0]
 
+  
+  # Tuple: [1490601525, "2017-03-27 09:58:45", "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757, "timestamp": 1490601525}]
   def _BuildTuple(v, couple):
     return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
 #    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
 
+  def GetTuple(self, timestamp, couple):
+    for v in self.__L:
+      if v[2] == couple:
+        print("v[0]", end='')
+        print(v[0])
+        if v[0] == timestamp:
+          return v[3]
+    return None
 
   def RecPublicTrades(self, couple, limit=2000):
     T=self.__A.get_param3(couple, method='trades', param="limit=%d"%limit)
@@ -194,36 +204,44 @@ class MyRich:
   
 ###########################################################################
 
-StartTime=datetime.datetime.now().timestamp()
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
 
-mode=""
-DataPath=""
+    StartTime=datetime.datetime.now().timestamp()
 
-if len(sys.argv) > 1:
-  for arg in sys.argv:
-    if arg == "crawler":
-      mode = "crawler"
-    if "path" in arg:
-      s = arg.split("=")
-      DataPath=s[1]+"/"
-    if arg == "help":
-      print("Usage:")
-      print("  %s [crawler] [path=/DATA_PATH] [help]" % sys.argv[0])
-      exit(0)
+    mode=""
+    DataPath=""
 
-R = MyRich(Keys, DataPath)
+    if len(argv) > 1:
+      for arg in argv:
+        if arg == "crawler":
+          mode = "crawler"
+        if "path" in arg:
+          s = arg.split("=")
+          DataPath=s[1]+"/"
+        if arg == "help":
+          print("Usage:")
+          print("  %s [crawler] [path=/DATA_PATH] [help]" % argv[0])
+          exit(0)
+    
+    R = MyRich(Keys, DataPath)
+    
+    R.Info()
+    
+    if mode == "crawler":
+      R.Crawler()
+    else:
+      R.Test()
+    
+    
+    EndTime=datetime.datetime.now().timestamp()
+    
+    print("%d seconds" % (EndTime-StartTime))
+    print("=============================================================================")
+    
 
-R.Info()
 
-if mode == "crawler":
-  R.Crawler()
-else:
-  R.Test()
-
-
-EndTime=datetime.datetime.now().timestamp()
-
-print("%d seconds" % (EndTime-StartTime))
-print("=============================================================================")
-
+if __name__ == "__main__":
+    sys.exit(main())
 
