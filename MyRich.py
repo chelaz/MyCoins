@@ -20,6 +20,7 @@
 import datetime
 import json
 import os.path
+import sys
 
 from btceapi import api
 from Keys import Keys
@@ -45,9 +46,11 @@ class MyRich:
   __A = None
   __L = []
   __V = 0 # File Version
+  __DataPath = ""
 
-  def __init__(self, Keys):
+  def __init__(self, Keys, DataPath=""):
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
+    self.__DataPath=DataPath
 
   def Info(self):
     I=self.__A.getInfo()
@@ -85,27 +88,45 @@ class MyRich:
   def _SortByTimestamp(self, item):
     return item[0]
 
+  
+  # Tuple: [1490601525, "2017-03-27 09:58:45", "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757, "timestamp": 1490601525}]
   def _BuildTuple(v, couple):
     return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
 #    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
 
+  def GetTuple(self, timestamp, couple):
+    for v in self.__L:
+      if v[2] == couple:
+        print("v[0]", end='')
+        print(v[0])
+        if v[0] == timestamp:
+          return v[3]
+    return None
 
+<<<<<<< HEAD:my.py
   def RecPublicTrades(self, couple):
     T=self.__A.get_param3(couple, method='trades', param="limit=10")
+=======
+  def RecPublicTrades(self, couple, limit=2000):
+    T=self.__A.get_param3(couple, method='trades', param="limit=%d"%limit)
+>>>>>>> 8b54ca931f921872b733a55a8d3f64620f0f4e6d:MyRich.py
 
     cnt=0
+    new=0
     for v in T[couple]:
       Tuple = MyRich._BuildTuple(v, couple)
       if not Tuple in self.__L:
         self.__L.append(Tuple)
+        new+=1
       else:
         cnt+=1
       #else:
       #  print("Tuple already in list: ", end='')
       #  print(v)
     
-    if cnt > 0:
-      print("  %d tuples already exist in list" % cnt)
+    #if cnt > 0:
+    #  print("  %d tuples already exist in list" % cnt)
+    print("  %s: %d/%d new tuples" % (couple, new, new+cnt)) 
         
     self.__L=sorted(self.__L, key=self._SortByTimestamp)
  
@@ -123,7 +144,7 @@ class MyRich:
     I=self.__A.getInfo()
     #print(I)
     SrvTm = MyTime(I['return']['server_time'])
-    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strWeek())
+    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, SrvTm.strWeek())
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
@@ -138,7 +159,7 @@ class MyRich:
   def SaveList(self):
     I=self.__A.getInfo()
     SrvTm = MyTime(I['return']['server_time'])
-    FileName="Trades-V%02d-%s.dat" % (self.__V, SrvTm.strWeek())
+    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, SrvTm.strWeek())
     print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
 
     f=open(FileName, "w")
@@ -147,33 +168,41 @@ class MyRich:
       f.write("\n")
 #      f.write(json.dumps(v, indent=2))
     f.close()
-   
+
+
+  def Crawler(self):
+    R.LoadList()
+
+    R.RecPublicTrades("dsh_btc")
+    R.RecPublicTrades("dsh_eur")
+    R.RecPublicTrades("dsh_usd")
+    R.RecPublicTrades("btc_usd")
+    R.RecPublicTrades("btc_eur")
+    R.RecPublicTrades("eth_btc")
+    R.RecPublicTrades("eth_eur")
+    R.RecPublicTrades("eth_usd")
+    
+    R.SaveList()
+
 ###########################################################################
 
-StartTime=datetime.datetime.now().timestamp()
+  def Test(self):
 
+    #BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
+    #EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
+    #R.TransHist(BeginDay, EndDay)
 
-BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
-EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
+    #TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
+    #print(TradeHist)
 
-#print("Begin and End Day: %s - %s" % (BeginDay, EndDay))
+    #R.PublicTrades("dsh_btc")
 
+    R.LoadList()
 
-R = MyRich(Keys)
+    R.RecPublicTrades("dsh_btc", 20)
+    R.RecPublicTrades("dsh_eur", 20)
 
-R.Info()
-
-#BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
-#EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
-#R.TransHist(BeginDay, EndDay)
-
-#TradeHist=A.TradeHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="", tsince=BeginDay, tend=EndDay, tpair='btc_usd')
-#print(TradeHist)
-
-#R.PublicTrades("dsh_btc")
-
-R.LoadList()
-
+<<<<<<< HEAD:my.py
 R.RecPublicTrades("dsh_btc")
 R.RecPublicTrades("dsh_eur")
 #R.RecPublicTrades("dsh_usd")
@@ -182,14 +211,53 @@ R.RecPublicTrades("dsh_eur")
 R.RecPublicTrades("eth_btc")
 R.RecPublicTrades("eth_eur")
 #R.RecPublicTrades("eth_usd")
+=======
+    R.PrintPublicTrades()
+>>>>>>> 8b54ca931f921872b733a55a8d3f64620f0f4e6d:MyRich.py
 
-#R.PrintPublicTrades()
+    R.SaveList()
 
-R.SaveList()
+  
+###########################################################################
 
-EndTime=datetime.datetime.now().timestamp()
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
 
-print("%d seconds" % (EndTime-StartTime))
-print("=============================================================================")
+    StartTime=datetime.datetime.now().timestamp()
 
+    mode=""
+    DataPath=""
+
+    if len(argv) > 1:
+      for arg in argv:
+        if arg == "crawler":
+          mode = "crawler"
+        if "path" in arg:
+          s = arg.split("=")
+          DataPath=s[1]+"/"
+        if arg == "help":
+          print("Usage:")
+          print("  %s [crawler] [path=/DATA_PATH] [help]" % argv[0])
+          exit(0)
+    
+    R = MyRich(Keys, DataPath)
+    
+    R.Info()
+    
+    if mode == "crawler":
+      R.Crawler()
+    else:
+      R.Test()
+    
+    
+    EndTime=datetime.datetime.now().timestamp()
+    
+    print("%d seconds" % (EndTime-StartTime))
+    print("=============================================================================")
+    
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
