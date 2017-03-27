@@ -103,13 +103,19 @@ class MyRich:
           return v[3]
     return None
 
-<<<<<<< HEAD:my.py
-  def RecPublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=10")
-=======
+
+  def GetListFromCouple(self, couple):
+    return filter(lambda v : v[2] == couple, self.__L)
+
+  def GetPlotList(self, List):
+    return map(lambda v : (v[0], v[3]["price"]), List)
+
+  def GetPlotListFromCouple(self, couple):
+    return list(self.GetPlotList(self.GetListFromCouple(couple)))
+
+
   def RecPublicTrades(self, couple, limit=2000):
     T=self.__A.get_param3(couple, method='trades', param="limit=%d"%limit)
->>>>>>> 8b54ca931f921872b733a55a8d3f64620f0f4e6d:MyRich.py
 
     cnt=0
     new=0
@@ -171,18 +177,18 @@ class MyRich:
 
 
   def Crawler(self):
-    R.LoadList()
+    self.LoadList()
 
-    R.RecPublicTrades("dsh_btc")
-    R.RecPublicTrades("dsh_eur")
-    R.RecPublicTrades("dsh_usd")
-    R.RecPublicTrades("btc_usd")
-    R.RecPublicTrades("btc_eur")
-    R.RecPublicTrades("eth_btc")
-    R.RecPublicTrades("eth_eur")
-    R.RecPublicTrades("eth_usd")
+    self.PublicTrades("dsh_btc")
+    self.PublicTrades("dsh_eur")
+    self.RecPublicTrades("dsh_usd")
+    self.RecPublicTrades("btc_usd")
+    self.RecPublicTrades("btc_eur")
+    self.RecPublicTrades("eth_btc")
+    self.RecPublicTrades("eth_eur")
+    self.RecPublicTrades("eth_usd")
     
-    R.SaveList()
+    self.SaveList()
 
 ###########################################################################
 
@@ -197,25 +203,22 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    R.LoadList()
+    #R.LoadList()
 
-    R.RecPublicTrades("dsh_btc", 20)
-    R.RecPublicTrades("dsh_eur", 20)
+    self.RecPublicTrades("dsh_btc", 2000)
+    self.RecPublicTrades("dsh_eur", 2000)
 
-<<<<<<< HEAD:my.py
-R.RecPublicTrades("dsh_btc")
-R.RecPublicTrades("dsh_eur")
-#R.RecPublicTrades("dsh_usd")
-#R.RecPublicTrades("btc_usd")
-#R.RecPublicTrades("btc_eur")
-R.RecPublicTrades("eth_btc")
-R.RecPublicTrades("eth_eur")
-#R.RecPublicTrades("eth_usd")
-=======
-    R.PrintPublicTrades()
->>>>>>> 8b54ca931f921872b733a55a8d3f64620f0f4e6d:MyRich.py
+    self.PrintPublicTrades()
 
-    R.SaveList()
+    C=self.GetListFromCouple("dsh_eur")
+   
+    L=self.GetPlotList(C) 
+    print("List from dsh_eur")
+    for v in L:
+      print(v)
+
+
+    #self.SaveList()
 
   
 ###########################################################################
