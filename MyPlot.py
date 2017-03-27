@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+#http://matplotlib.org/2.0.0/users/pyplot_tutorial.html
+
 from MyRich import MyRich
 from Keys import Keys
 
