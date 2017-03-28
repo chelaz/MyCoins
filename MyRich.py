@@ -43,9 +43,10 @@ class MyTime:
 
 
 class MyRich:
-  __A = None
-  __L = []
-  __V = 0 # File Version
+  __A = None  # Instance of BTCeAPI
+  __L = []    # Trades History
+  __F = []    # Funds
+  __V = 0     # File Version
   __DataPath = ""
 
   def __init__(self, Keys, DataPath=""):
@@ -56,13 +57,21 @@ class MyRich:
     I=self.__A.getInfo()
     print("Info:\n  Balance:")
     #print(I)
-    Ret=I['return']['funds']
-    for v in Ret:
-      if Ret[v] > 0:
-        print("    %s: %s" % (v, Ret[v]))
+    self.__F=I['return']['funds']
+     
+    for v in self.__F:
+      if self.__F[v] > 0:
+        print("    %s: %s" % (v, self.__F[v]))
     SrvTm = MyTime(I['return']['server_time'])
     print("  Server Time: "+SrvTm.str())
     print("-----------------------------------------")
+
+  def GetBalance(self, currency):
+    if currency in self.__F:
+      return float(self.__F[currency])
+    else:
+      return 0.0
+
   def TransHist(self, BeginDay, EndDay):
     History=self.__A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
     #print(History)
@@ -120,10 +129,12 @@ class MyRich:
     return list(self.__GetPlotList(self.GetListFromCouple(couple),UseTime))
 
   # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
-  def GetPlot(self, couple):
+  def GetPlot(self, couple, NumCoins=1.0):
     L=self.__GetPlotListFromCouple(couple)
-    return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1],L)))
+    return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
+  
 
+### Crawler
 
   def RecPublicTrades(self, couple, limit=2000):
     T=self.__A.get_param3(couple, method='trades', param="limit=%d"%limit)

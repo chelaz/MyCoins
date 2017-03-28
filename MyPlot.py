@@ -31,52 +31,65 @@ def timestampToHrsMin(x, pos):
   return datetime.datetime.fromtimestamp(x).strftime('%H:%M')
 
 
+def DoPlot(R, couple, fmt):
+  currency=couple.split('_')[0]
+
+  plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
+
+  ax=plt.gca()
+
+  ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
+  ax.xaxis.set_minor_locator(mticker.AutoLocator())
+  ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
+
+  plt.grid(True)
+  plt.ylabel(couple)
+
+ 
 
 R = MyRich(Keys, "Trades/")
-#R.Info()
+R.Info()
 
 R.LoadList()
 #R.RecPublicTrades("dsh_eur", 10)
 
-couple1="dsh_btc"
-couple2="eth_btc"
- 
-#L1=R.GetPlotListFromCouple(couple1)
-#L2=R.GetPlotListFromCouple(couple2)
-
-#print("Plotting %d samples of %s" % (len(L1), couple1))
-#print("Plotting %d samples of %s" % (len(L2), couple2))
-
-#plot1=(list(map(lambda v:v[0],L1)), list(map(lambda v:v[1],L1)))
-#plot2=(list(map(lambda v:v[0],L2)), list(map(lambda v:v[1],L2)))
+couple1="dsh_eur"
+couple2="eth_eur"
 
 plt.subplot(2,1,1)
-plt.plot(*R.GetPlot(couple1), 'b-')
-
-ax=plt.gca()
-
-ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
-ax.xaxis.set_minor_locator(mticker.AutoLocator())
-ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
-
-
-plt.grid(True)
-plt.ylabel(couple1)
-
-
+DoPlot(R, couple1, 'b-')
 
 plt.subplot(2,1,2)
-plt.plot(*R.GetPlot(couple1), 'r-')
-
-ax=plt.gca()
-
-ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
-ax.xaxis.set_minor_locator(mticker.AutoLocator())
-ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
+DoPlot(R, couple2, 'r-')
 
 
-plt.grid(True)
-plt.ylabel(couple2)
+#plt.subplot(2,1,1)
+#plt.plot(*R.GetPlot(couple1, R.GetBalance("dsh")), 'b-')
+#
+#ax=plt.gca()
+#
+#ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
+#ax.xaxis.set_minor_locator(mticker.AutoLocator())
+#ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
+#
+#
+#plt.grid(True)
+#plt.ylabel(couple1)
+#
+#
+#
+#plt.subplot(2,1,2)
+#plt.plot(*R.GetPlot(couple2, R.GetBalance("eth")), 'r-')
+#
+#ax=plt.gca()
+#
+#ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
+#ax.xaxis.set_minor_locator(mticker.AutoLocator())
+#ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
+#
+#
+#plt.grid(True)
+#plt.ylabel(couple2)
 plt.show()
 
 
