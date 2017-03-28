@@ -107,15 +107,22 @@ class MyRich:
   def GetListFromCouple(self, couple):
     return filter(lambda v : v[2] == couple, self.__L)
 
-  def GetPlotList(self, List, UseTime=False):
+### Plot functions
+
+  def __GetPlotList(self, List, UseTime=False):
     if UseTime:
       return map(lambda v : (v[1], v[3]["price"]), List)
     else:
       return map(lambda v : (v[0], v[3]["price"]), List)
 
 
-  def GetPlotListFromCouple(self, couple, UseTime=False):
-    return list(self.GetPlotList(self.GetListFromCouple(couple),UseTime))
+  def __GetPlotListFromCouple(self, couple, UseTime=False):
+    return list(self.__GetPlotList(self.GetListFromCouple(couple),UseTime))
+
+  # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
+  def GetPlot(self, couple):
+    L=self.__GetPlotListFromCouple(couple)
+    return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1],L)))
 
 
   def RecPublicTrades(self, couple, limit=2000):
