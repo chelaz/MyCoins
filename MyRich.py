@@ -107,11 +107,15 @@ class MyRich:
   def GetListFromCouple(self, couple):
     return filter(lambda v : v[2] == couple, self.__L)
 
-  def GetPlotList(self, List):
-    return map(lambda v : (v[0], v[3]["price"]), List)
+  def GetPlotList(self, List, UseTime=False):
+    if UseTime:
+      return map(lambda v : (v[1], v[3]["price"]), List)
+    else:
+      return map(lambda v : (v[0], v[3]["price"]), List)
 
-  def GetPlotListFromCouple(self, couple):
-    return list(self.GetPlotList(self.GetListFromCouple(couple)))
+
+  def GetPlotListFromCouple(self, couple, UseTime=False):
+    return list(self.GetPlotList(self.GetListFromCouple(couple),UseTime))
 
 
   def RecPublicTrades(self, couple, limit=2000):
