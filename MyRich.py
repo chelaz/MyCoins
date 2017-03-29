@@ -103,14 +103,14 @@ class MyRich:
     return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
 #    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
 
-  def GetTuple(self, timestamp, couple):
-    for v in self.__L:
-      if v[2] == couple:
-        print("v[0]", end='')
-        print(v[0])
-        if v[0] == timestamp:
-          return v[3]
-    return None
+#  def GetTuple(self, timestamp, couple):
+#    for v in self.__L:
+#      if v[2] == couple:
+#        print("v[0]", end='')
+#        print(v[0])
+#        if v[0] == timestamp:
+#          return v[3]
+#    return None
 
 
   def GetListFromCouple(self, couple):
