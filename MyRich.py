@@ -129,9 +129,14 @@ class MyRich:
     return list(self.__GetPlotList(self.GetListFromCouple(couple),UseTime))
 
   # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
-  def GetPlot(self, couple, NumCoins=1.0):
+  def GetPlot(self, couple, NumCoins=1.0, Percentage=False):
     L=self.__GetPlotListFromCouple(couple)
-    return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
+    if Percentage:
+      #first entry is 100 %
+      factor=100.0/L[0][1]
+      return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*factor,L)))
+    else:
+      return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
   
 
 ### Crawler

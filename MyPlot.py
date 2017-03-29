@@ -31,10 +31,13 @@ def timestampToHrsMin(x, pos):
   return datetime.datetime.fromtimestamp(x).strftime('%H:%M')
 
 
-def DoPlot(R, couple, fmt):
+def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
   currency=couple.split('_')[0]
 
-  plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
+  if ConsiderBalance:
+    plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
+  else:
+    plt.plot(*R.GetPlot(couple, 1.0, Percentage), fmt) 
 
   ax=plt.gca()
 
@@ -53,14 +56,25 @@ R.Info()
 R.LoadList()
 #R.RecPublicTrades("dsh_eur", 10)
 
-couple1="dsh_eur"
-couple2="eth_eur"
+#couple1="dsh_eur"
+#couple2="eth_eur"
+
+couple1b="dsh_btc"
+couple2b="eth_btc"
+couple1e="dsh_eur"
+couple2e="eth_eur"
+
+
 
 plt.subplot(2,1,1)
-DoPlot(R, couple1, 'b-')
+DoPlot(R, couple1b, 'b-', ConsiderBalance=False, Percentage=True)
+DoPlot(R, couple1e, 'g-', ConsiderBalance=False, Percentage=True)
+
 
 plt.subplot(2,1,2)
-DoPlot(R, couple2, 'r-')
+DoPlot(R, couple2b, 'r-', ConsiderBalance=False, Percentage=True)
+DoPlot(R, couple2e, 'g-', ConsiderBalance=False, Percentage=True)
+
 
 
 #plt.subplot(2,1,1)
