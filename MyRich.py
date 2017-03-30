@@ -29,8 +29,11 @@ from Keys import Keys
 class MyTime:
   __datetime = None
 
-  def __init__(self, timestamp):
-    self.__datetime = datetime.datetime.fromtimestamp(timestamp)
+  def __init__(self, timestamp=0):
+    if timestamp == 0:
+      self.__datetime=datetime.datetime.now()
+    else:
+      self.__datetime=datetime.datetime.fromtimestamp(timestamp)
 
   def str(self):
     return self.__datetime.strftime('%Y-%m-%d %H:%M:%S')
@@ -40,6 +43,11 @@ class MyTime:
 
   def strWeek(self):
     return self.__datetime.strftime('%Y-%W')
+
+  def PrintDiff(self):
+    #diff=datetime.datetime.now().timestamp()-self.__datetime.timestamp()
+    diff=datetime.datetime.now()-self.__datetime
+    print("... time diff "+str(diff))
 
 
 class MyRich:
@@ -114,23 +122,89 @@ class MyRich:
 
 
   def GetListFromCouple(self, couple):
-    return filter(lambda v : v[2] == couple, self.__L)
+    D=MyTime()
+    L=filter(lambda v : v[2] == couple, self.__L)
+    D.PrintDiff()
+    return L
+
+  def GetPriceList(self, couple):
+    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
+
+  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  def BuildMinMaxList(self, couple, bucket_seconds):
+
+    Debug=False
+
+    L=self.GetPriceList(couple)
+
+    D=MyTime()
+
+    start_ts=L[0][0]
+    
+    ts=start_ts
+    if Debug:
+      print("Starting List from %d" % start_ts)
+    
+    min=100000000000
+    max=0
+    sum=0
+    cnt=0
+
+    MMList = []
+
+    if Debug:
+      print("Dbg minmax:")
+    for v in L:
+      if Debug:
+        print("  "+str(v))
+             
+      if v[0] > ts + bucket_seconds:
+        if Debug:
+          print("  -> ts=%d, min=%f, max=%f, amt=%f" %(ts, min, max, sum))
+        MMList.append([ts, {'min':min, 'max':max, 'amount':sum , 'cnt':cnt }])
+        ts = v[0]
+        min=v[1]
+        max=v[1]
+        sum=v[2]
+        cnt=1
+      else:
+        if Debug:
+          print("  ..")
+        if min > v[1]:
+          min=v[1]
+        if max < v[1]:
+          max=v[1]
+        sum += v[2]
+        cnt += 1
+    MMList.append([ts, {'min':min, 'max':max, 'amount':sum, 'cnt':cnt }])
+ 
+    if Debug:
+      print("MMList:")
+      for v in MMList:
+        print("  "+str(v))
+   
+    D.PrintDiff()
+    
+    return MMList       
+
 
 ### Plot functions
 
+  # obsolete
   def __GetPlotList(self, List, UseTime=False):
     if UseTime:
       return map(lambda v : (v[1], v[3]["price"]), List)
     else:
       return map(lambda v : (v[0], v[3]["price"]), List)
 
-
+  # obsolete
   def __GetPlotListFromCouple(self, couple, UseTime=False):
     return list(self.__GetPlotList(self.GetListFromCouple(couple),UseTime))
 
   # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
   def GetPlot(self, couple, NumCoins=1.0, Percentage=False):
-    L=self.__GetPlotListFromCouple(couple)
+    #L=self.__GetPlotListFromCouple(couple)
+    L=self.GetPriceList(couple)
     if Percentage:
       #first entry is 100 %
       factor=100.0/L[0][1]
@@ -230,19 +304,22 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    #R.LoadList()
+    self.LoadList()
 
-    self.RecPublicTrades("dsh_btc", 2000)
-    self.RecPublicTrades("dsh_eur", 2000)
+    #self.RecPublicTrades("dsh_btc", 10)
+    #self.RecPublicTrades("dsh_eur", 2000)
 
-    self.PrintPublicTrades()
+    #self.PrintPublicTrades()
 
-    C=self.GetListFromCouple("dsh_eur")
-   
-    L=self.GetPlotList(C) 
-    print("List from dsh_eur")
+    #C=self.GetListFromCouple("dsh_eur")
+    
+    L=self.BuildMinMaxList("dsh_usd", 100)
+    
+    #L=self.__GetPlotList(C) 
+    #print("List from dsh_eur")
+  
     for v in L:
-      print(v)
+      print(str(v))
 
 
     #self.SaveList()
@@ -253,6 +330,8 @@ class MyRich:
 def main(argv=None):
     if argv is None:
         argv = sys.argv
+
+    D=MyTime()
 
     StartTime=datetime.datetime.now().timestamp()
 
@@ -284,6 +363,8 @@ def main(argv=None):
     EndTime=datetime.datetime.now().timestamp()
     
     print("%d seconds" % (EndTime-StartTime))
+    print("Overall: ", end='')
+    D.PrintDiff()
     print("=============================================================================")
     
 
