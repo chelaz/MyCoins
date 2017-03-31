@@ -212,7 +212,20 @@ class MyRich:
     else:
       return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
   
+  
+  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  def GetMMPlot(self, couple, BucSec, Percentage=False):
+    L=self.BuildMinMaxList(couple, BucSec)
+    factor=1.0
 
+    if Percentage:
+      factor=100.0/((L[0][1]['min']+L[0][1]['max'])/2.0) #first entry is 100 %
+       
+    MinPlot=(list(map(lambda v:v[0],L)), list(map(lambda v:v[1]['min']*factor,L)))
+    MaxPlot=(list(map(lambda v:v[0],L)), list(map(lambda v:v[1]['max']*factor,L)))
+
+    return MinPlot, MaxPlot
+ 
 ### Crawler
 
   def RecPublicTrades(self, couple, limit=2000):
@@ -248,9 +261,11 @@ class MyRich:
       print(v)
 
   def LoadList(self):
-    I=self.__A.getInfo()
+    #I=self.__A.getInfo()
     #print(I)
-    SrvTm = MyTime(I['return']['server_time'])
+    #SrvTm = MyTime(I['return']['server_time'])
+    #SrvTm= MyTime(1490112676) # wk 12
+    SrvTm= MyTime(1490815277)  # wk 13
     FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, SrvTm.strWeek())
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):

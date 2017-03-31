@@ -39,6 +39,7 @@ def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
   else:
     plt.plot(*R.GetPlot(couple, 1.0, Percentage), fmt) 
 
+def ConfigPlot(couple):
   ax=plt.gca()
 
   ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
@@ -51,7 +52,7 @@ def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
  
 
 R = MyRich(Keys, "Trades/")
-R.Info()
+#R.Info()
 
 R.LoadList()
 #R.RecPublicTrades("dsh_eur", 10)
@@ -59,21 +60,26 @@ R.LoadList()
 #couple1="dsh_eur"
 #couple2="eth_eur"
 
-couple1b="dsh_btc"
-couple2b="eth_btc"
-couple1e="dsh_eur"
-couple2e="eth_eur"
+couple_db="dsh_btc"
+couple_eb="eth_btc"
+couple_de="dsh_eur"
+couple_ee="eth_eur"
 
 
+plt.subplot(3,1,1)
+DoPlot(R, couple_db, 'b-', ConsiderBalance=False, Percentage=True)
+DoPlot(R, couple_de, 'g-', ConsiderBalance=False, Percentage=True)
+ConfigPlot(couple_db)
 
-plt.subplot(2,1,1)
-DoPlot(R, couple1b, 'b-', ConsiderBalance=False, Percentage=True)
-DoPlot(R, couple1e, 'g-', ConsiderBalance=False, Percentage=True)
+plt.subplot(3,1,2)
+DoPlot(R, couple_eb, 'r-', ConsiderBalance=False, Percentage=True)
+DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
+ConfigPlot(couple_eb)
 
-
-plt.subplot(2,1,2)
-DoPlot(R, couple2b, 'r-', ConsiderBalance=False, Percentage=True)
-DoPlot(R, couple2e, 'g-', ConsiderBalance=False, Percentage=True)
+plt.subplot(3,1,3)
+MMPlot=R.GetMMPlot(couple_ee, 15*60, Percentage=True)
+plt.plot(*MMPlot[0], 'b-', *MMPlot[1],'r-') 
+ConfigPlot(couple_ee)
 
 
 
