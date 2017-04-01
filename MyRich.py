@@ -44,6 +44,9 @@ class MyTime:
   def strWeek(self):
     return self.__datetime.strftime('%Y-%W')
 
+  def Week(self):
+    return int(self.__datetime.strftime('%W'))
+
   def PrintDiff(self):
     #diff=datetime.datetime.now().timestamp()-self.__datetime.timestamp()
     diff=datetime.datetime.now()-self.__datetime
@@ -51,10 +54,13 @@ class MyTime:
 
 
 class MyRich:
+
   __A = None  # Instance of BTCeAPI
   __L = []    # Trades History
   __F = []    # Funds
-  __V = 0     # File Version
+  __V = 1     # File Version
+
+  __StartDate = MyTime()
   __DataPath = ""
 
   def __init__(self, Keys, DataPath=""):
@@ -105,11 +111,18 @@ class MyRich:
   def _SortByTimestamp(self, item):
     return item[0]
 
-  
-  # Tuple: [1490601525, "2017-03-27 09:58:45", "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757, "timestamp": 1490601525}]
-  def _BuildTuple(v, couple):
-    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
-#    return (v['timestamp'], MyTime(v['timestamp']).str(), couple, v)
+  # Tuples: 
+  # V00:  [1490601525, "2017-03-27 09:58:45", "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757, "timestamp": 1490601525}]
+  # V01:  [1490601525, "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
+  def _BuildTuple(v, couple, timestamp=0):
+    if timestamp == 0:
+      ts = v['timestamp']
+      del v['timestamp']
+    else:
+      ts = timestamp
+    return [ts, couple, v]
+#    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
+
 
 #  def GetTuple(self, timestamp, couple):
 #    for v in self.__L:
@@ -121,6 +134,7 @@ class MyRich:
 #    return None
 
 
+  # obsolete
   def GetListFromCouple(self, couple):
     D=MyTime()
     L=filter(lambda v : v[2] == couple, self.__L)
@@ -128,7 +142,9 @@ class MyRich:
     return L
 
   def GetPriceList(self, couple):
-    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
+    return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']), filter(lambda v : v[1] == couple, self.__L)))
+#    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
+
 
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def BuildMinMaxList(self, couple, bucket_seconds):
@@ -205,6 +221,8 @@ class MyRich:
   def GetPlot(self, couple, NumCoins=1.0, Percentage=False):
     #L=self.__GetPlotListFromCouple(couple)
     L=self.GetPriceList(couple)
+    if len(L) == 0:
+      return []
     if Percentage:
       #first entry is 100 %
       factor=100.0/L[0][1]
@@ -265,8 +283,8 @@ class MyRich:
     #print(I)
     #SrvTm = MyTime(I['return']['server_time'])
     #SrvTm= MyTime(1490112676) # wk 12
-    SrvTm= MyTime(1490815277)  # wk 13
-    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, SrvTm.strWeek())
+    #SrvTm= MyTime(1490815277)  # wk 13
+    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, self.__StartDate.strWeek())
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
@@ -274,22 +292,66 @@ class MyRich:
 
     with open(FileName, "r") as ins:
       for line in ins:
-        self.__L.append(json.loads(line))
+        v=json.loads(line)
+        if (len(v) == 4): # V0
+          self.__L.append(MyRich._BuildTuple(v[3], v[2]))
+        if (len(v) == 3): # V1
+          #print(str(v))
+          self.__L.append(MyRich._BuildTuple(v[2], v[1], timestamp=v[0]))
 
     print(" ..loaded %d entries" % len(self.__L))
  
-  def SaveList(self):
-    I=self.__A.getInfo()
-    SrvTm = MyTime(I['return']['server_time'])
-    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, SrvTm.strWeek())
-    print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
+  def SaveList(self, version=None):
+    #I=self.__A.getInfo()
+    #SrvTm = MyTime(I['return']['server_time'])
+  
+    if not version:
+      version = self.__V
 
-    f=open(FileName, "w")
-    for v in self.__L:
-      f.write(json.dumps(v))
-      f.write("\n")
-#      f.write(json.dumps(v, indent=2))
-    f.close()
+    if version == 0: 
+      FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+      print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
+
+      f=open(FileName, "w")
+      for v in self.__L:
+        f.write(json.dumps(v))
+        f.write("\n")
+      f.close()
+
+    if version == 1:
+      print("Saving File version "+str(version))
+      FirstDate = MyTime(self.__L[0][0])
+      wk1 = FirstDate.Week()
+      wk2 = self.__StartDate.Week()
+      if wk1 != wk2:
+        print("  FirstDate wk: %d != %d (this week)" % (wk1, wk2))
+        
+        FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstDate.strWeek())
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+         
+        L1 = list(filter(lambda v: MyTime(v[0]).Week() == wk1, self.__L))
+        LN = list(filter(lambda v: MyTime(v[0]).Week() != wk1, self.__L))
+   
+        print("Saving data (%d entries) to %s" %(len(L1), FileNameWk1)) 
+#        for v in L1:
+#          print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
+#          print(str(v))
+        f=open(FileNameWk1, "w")
+        for v in L1:
+          f.write(json.dumps(v)+"\n")
+        f.close()
+      else:
+        LN = self.__L
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+
+      print("Saving data (%d entries) to %s" %(len(LN), FileNameWk2)) 
+#      for v in LN:
+#        print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
+#        print(str(v))
+      f=open(FileNameWk2, "w")
+      for v in LN:
+        f.write(json.dumps(v)+"\n")
+      f.close()
 
 
   def Crawler(self):
@@ -307,6 +369,18 @@ class MyRich:
     self.SaveList()
 
 ###########################################################################
+
+  def TestSaveV1(self):
+    self.LoadList()
+    self.RecPublicTrades("dsh_btc", 10)
+ 
+    for v in self.__L:
+      print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
+      print(str(v))
+
+    self.SaveList(1)
+
+
 
   def Test(self):
 
@@ -328,18 +402,21 @@ class MyRich:
 
     #C=self.GetListFromCouple("dsh_eur")
     
-    L=self.BuildMinMaxList("dsh_usd", 100)
+    #L=self.BuildMinMaxList("dsh_usd", 100)
     
     #L=self.__GetPlotList(C) 
     #print("List from dsh_eur")
   
+    L=self.GetPriceList("dsh_btc")
     for v in L:
+      #print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
       print(str(v))
 
 
-    #self.SaveList()
+    #self.SaveList(1)
 
-  
+    #self.TestSaveV1()
+      
 ###########################################################################
 
 def main(argv=None):
@@ -367,7 +444,7 @@ def main(argv=None):
     
     R = MyRich(Keys, DataPath)
     
-    R.Info()
+    #R.Info()
     
     if mode == "crawler":
       R.Crawler()
