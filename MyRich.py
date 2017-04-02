@@ -47,10 +47,12 @@ class MyTime:
   def Week(self):
     return int(self.__datetime.strftime('%W'))
 
-  def PrintDiff(self):
+  def PrintDiff(self, end='\n'):
     #diff=datetime.datetime.now().timestamp()-self.__datetime.timestamp()
     diff=datetime.datetime.now()-self.__datetime
-    print("... time diff "+str(diff))
+#    print("... time diff "+str(diff))
+    print(str(diff), end=end)
+
 
 
 class MyRich:
@@ -66,6 +68,11 @@ class MyRich:
   def __init__(self, Keys, DataPath=""):
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
     self.__DataPath=DataPath
+
+  def PrintEllapsed(self, Str=""):
+    print("_> ", end='')
+    self.__StartDate.PrintDiff(end='') 
+    print(" ellapsed for %s " % Str)
 
   def Info(self):
     I=self.__A.getInfo()
@@ -136,9 +143,9 @@ class MyRich:
 
   # obsolete
   def GetListFromCouple(self, couple):
-    D=MyTime()
+    #D=MyTime()
     L=filter(lambda v : v[2] == couple, self.__L)
-    D.PrintDiff()
+    #D.PrintDiff()
     return L
 
   def GetPriceList(self, couple):
@@ -153,7 +160,7 @@ class MyRich:
 
     L=self.GetPriceList(couple)
 
-    D=MyTime()
+    #D=MyTime()
 
     start_ts=L[0][0]
     
@@ -199,7 +206,7 @@ class MyRich:
       for v in MMList:
         print("  "+str(v))
    
-    D.PrintDiff()
+    #D.PrintDiff()
     
     return MMList       
 
@@ -368,11 +375,15 @@ class MyRich:
     
     self.SaveList()
 
+  def ConvertData_V0toV1(self):
+    self.LoadList()
+    self.SaveList(1)
+
 ###########################################################################
 
   def TestSaveV1(self):
     self.LoadList()
-    self.RecPublicTrades("dsh_btc", 10)
+    #self.RecPublicTrades("dsh_btc", 10)
  
     for v in self.__L:
       print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
@@ -413,7 +424,7 @@ class MyRich:
       print(str(v))
 
 
-    #self.SaveList(1)
+    self.SaveList(1)
 
     #self.TestSaveV1()
       
@@ -434,20 +445,24 @@ def main(argv=None):
       for arg in argv:
         if arg == "crawler":
           mode = "crawler"
+        if arg == "v0to1":
+          mode = "v0to1"
         if "path" in arg:
           s = arg.split("=")
           DataPath=s[1]+"/"
         if arg == "help":
           print("Usage:")
-          print("  %s [crawler] [path=/DATA_PATH] [help]" % argv[0])
+          print("  %s [crawler] [path=/DATA_PATH] [help] [v0to1]" % argv[0])
           exit(0)
-    
+   
     R = MyRich(Keys, DataPath)
     
     #R.Info()
     
     if mode == "crawler":
       R.Crawler()
+    elif mode == "v0to1":
+      R.ConvertData_V0toV1()
     else:
       R.Test()
     
