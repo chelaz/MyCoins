@@ -29,32 +29,38 @@ from Keys import Keys
 class MyTime:
   __datetime = None
 
+  # timestamp == 0 means now
   def __init__(self, timestamp=0):
     if timestamp == 0:
       self.__datetime=datetime.datetime.now()
     else:
       self.__datetime=datetime.datetime.fromtimestamp(timestamp)
+  
+  def Timestamp(self):
+    return int(self.__datetime.timestamp())
 
-  def str(self):
+  def Str(self):
+    """ returns string in format by example: 2017-12-31 23:59:00 """
     return self.__datetime.strftime('%Y-%m-%d %H:%M:%S')
 
-  def strDay(self):
+  def StrDay(self):
+    """ returns string in format by example: 2017-12-31 """
     return self.__datetime.strftime('%Y-%m-%d')
 
-  def strWeek(self):
+  def StrWeek(self):
+    """ returns string in format by example: 2017-51 """
     return self.__datetime.strftime('%Y-%W')
 
   def Week(self):
+    """ returns integer of week number """
     return int(self.__datetime.strftime('%W'))
 
   def Year(self):
+    """ returns integer of year """
     return int(self.__datetime.strftime('%Y'))
 
-
   def PrintDiff(self, end='\n'):
-    #diff=datetime.datetime.now().timestamp()-self.__datetime.timestamp()
     diff=datetime.datetime.now()-self.__datetime
-#    print("... time diff "+str(diff))
     print(str(diff), end=end)
 
 
@@ -73,10 +79,13 @@ class MyRich:
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
     self.__DataPath=DataPath
 
-  def PrintEllapsed(self, Str=""):
+  def PrintElapsed(self, Str=""):
     print("_> ", end='')
     self.__StartDate.PrintDiff(end='') 
     print(" elapsed for %s " % Str)
+
+  def GetStartDate(self):
+    return self.__StartDate
 
   def Info(self):
     I=self.__A.getInfo()
@@ -88,7 +97,7 @@ class MyRich:
       if self.__F[v] > 0:
         print("    %s: %s" % (v, self.__F[v]))
     SrvTm = MyTime(I['return']['server_time'])
-    print("  Server Time: "+SrvTm.str())
+    print("  Server Time: "+SrvTm.Str())
     print("-----------------------------------------")
 
   def GetBalance(self, currency):
@@ -96,6 +105,9 @@ class MyRich:
       return float(self.__F[currency])
     else:
       return 0.0
+
+  def CleanHist(self):
+    self.__L = []
 
   def TransHist(self, BeginDay, EndDay):
     History=self.__A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
@@ -105,7 +117,7 @@ class MyRich:
       Ret=History['return']
       for v in Ret:
         TransTime=MyTime((Ret[v]['timestamp']))
-        print(TransTime.str(), end='')
+        print(TransTime.Str(), end='')
         print(Ret[v])
 
   def PublicTrades(self, couple):
@@ -115,7 +127,7 @@ class MyRich:
     for v in T[couple]:
       print ("%4d: " % cnt, end='')
       Time=MyTime(v['timestamp'])
-      print(Time.str(), end='')
+      print(Time.Str(), end='')
       print(v)
       cnt+=1
 
@@ -133,16 +145,6 @@ class MyRich:
       ts = timestamp
     return [ts, couple, v]
 #    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
-
-
-#  def GetTuple(self, timestamp, couple):
-#    for v in self.__L:
-#      if v[2] == couple:
-#        print("v[0]", end='')
-#        print(v[0])
-#        if v[0] == timestamp:
-#          return v[3]
-#    return None
 
 
   # obsolete
@@ -289,13 +291,8 @@ class MyRich:
       print("  ", end='')
       print(v)
 
-  def LoadList(self, version=None, week=0, year=0):
-    #I=self.__A.getInfo()
-    #print(I)
-    #SrvTm = MyTime(I['return']['server_time'])
-    #SrvTm= MyTime(1490112676) # wk 12
-    #SrvTm= MyTime(1490815277)  # wk 13
 
+  def LoadList(self, version=None, week=0, year=0):
     if version == None:
       version = self.__V
 
@@ -304,7 +301,6 @@ class MyRich:
     if year == 0:
       year = self.__StartDate.Year()
 
-    print("Ver: %d" % version)
     FileName="%sTrades-V%02d-%4d-%02d.dat" % (self.__DataPath, version, year, week)
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):
@@ -322,7 +318,7 @@ class MyRich:
 
     FirstEntry=MyTime(self.__L[0][0])
     LastEntry =MyTime(self.__L[-1][0])
-    print(" ..loaded %d entries from %s (w %d) to %s (w %d)" % (len(self.__L), FirstEntry.str(), FirstEntry.Week(), LastEntry.str(), LastEntry.Week()))
+    print(" ..loaded %d entries from %s (w %d) to %s (w %d)" % (len(self.__L), FirstEntry.Str(), FirstEntry.Week(), LastEntry.Str(), LastEntry.Week()))
     return True
 
   def SaveList(self, version=None):
@@ -333,7 +329,7 @@ class MyRich:
       version = self.__V
 
     if version == 0: 
-      FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+      FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.StrWeek())
       print("Saving data (%d entries) to %s" %(len(self.__L), FileName)) 
 
       f=open(FileName, "w")
@@ -351,8 +347,8 @@ class MyRich:
       if wk1 != wk2:
         print("  First entry wk: %d != %d last entry" % (wk1, wk2))
         
-        FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstEntry.strWeek())
-        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.strWeek())
+        FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstEntry.StrWeek())
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
          
         L1 = list(filter(lambda v: MyTime(v[0]).Week() == wk1, self.__L))
         LN = list(filter(lambda v: MyTime(v[0]).Week() != wk1, self.__L))
@@ -367,7 +363,7 @@ class MyRich:
         f.close()
       else:
         LN = self.__L
-        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.StrWeek())
 
       print("Saving data (%d entries) to %s" %(len(LN), FileNameWk2)) 
 #      for v in LN:
@@ -382,8 +378,8 @@ class MyRich:
   def Crawler(self):
     self.LoadList()
 
-    self.PublicTrades("dsh_btc")
-    self.PublicTrades("dsh_eur")
+    self.RecPublicTrades("dsh_btc")
+    self.RecPublicTrades("dsh_eur")
     self.RecPublicTrades("dsh_usd")
     self.RecPublicTrades("btc_usd")
     self.RecPublicTrades("btc_eur")
@@ -401,6 +397,9 @@ class MyRich:
     # load V0 with different weeks -> save to different files
     if self.LoadList(version=0, week=13, year=2017):
       self.SaveList(version=1)
+    self.CleanHist()
+    if self.LoadList(version=1, week=14, year=2017):
+      self.SaveList(version=1)
 
 
 ###########################################################################
@@ -410,7 +409,7 @@ class MyRich:
     #self.RecPublicTrades("dsh_btc", 10)
  
     for v in self.__L:
-      print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
+      print("Wk[%s] " % MyTime(v[0]).StrWeek(), end='')
       print(str(v))
 
     self.SaveList(1)
@@ -458,10 +457,6 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    D=MyTime()
-
-    StartTime=datetime.datetime.now().timestamp()
-
     mode=""
     DataPath=""
     week=0 # 0 is this week
@@ -492,6 +487,10 @@ def main(argv=None):
    
     R = MyRich(Keys, DataPath)
     
+    print("=============================================================================")
+    print("%s started in mode %s\tTS: %d (%s)" % (argv[0], mode, R.GetStartDate().Timestamp(), R.GetStartDate().Str()))
+    print("-----------------------------------------------------------------------------")
+
     #R.Info()
     if mode == "functest":
       R.FuncTest() 
@@ -502,14 +501,8 @@ def main(argv=None):
     else:
       R.Test()
     
-    
-    #EndTime=datetime.datetime.now().timestamp()
-    
-    #print("%d seconds" % (EndTime-StartTime))
-    #print("Overall: ", end='')
-    #D.PrintDiff()
     print("-----------------------------------------------------------------------------")
-    R.PrintEllapsed("Overall") 
+    R.PrintElapsed("Overall") 
     print("=============================================================================")
     
 

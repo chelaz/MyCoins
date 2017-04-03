@@ -57,7 +57,7 @@ R = MyRich(Keys, "Trades/")
 R.LoadList()
 #R.RecPublicTrades("dsh_eur", 10)
 
-R.PrintEllapsed("Load")
+R.PrintElapsed("Load")
 
 #couple1="dsh_eur"
 #couple2="eth_eur"
@@ -113,7 +113,7 @@ ConfigPlot(couple_ee)
 #plt.grid(True)
 #plt.ylabel(couple2)
 
-R.PrintEllapsed("Prepare Plots")
+R.PrintElapsed("Prepare Plots")
 
 plt.show()
 
