@@ -47,6 +47,10 @@ class MyTime:
   def Week(self):
     return int(self.__datetime.strftime('%W'))
 
+  def Year(self):
+    return int(self.__datetime.strftime('%Y'))
+
+
   def PrintDiff(self, end='\n'):
     #diff=datetime.datetime.now().timestamp()-self.__datetime.timestamp()
     diff=datetime.datetime.now()-self.__datetime
@@ -72,7 +76,7 @@ class MyRich:
   def PrintEllapsed(self, Str=""):
     print("_> ", end='')
     self.__StartDate.PrintDiff(end='') 
-    print(" ellapsed for %s " % Str)
+    print(" elapsed for %s " % Str)
 
   def Info(self):
     I=self.__A.getInfo()
@@ -285,17 +289,27 @@ class MyRich:
       print("  ", end='')
       print(v)
 
-  def LoadList(self):
+  def LoadList(self, version=None, week=0, year=0):
     #I=self.__A.getInfo()
     #print(I)
     #SrvTm = MyTime(I['return']['server_time'])
     #SrvTm= MyTime(1490112676) # wk 12
     #SrvTm= MyTime(1490815277)  # wk 13
-    FileName="%sTrades-V%02d-%s.dat" % (self.__DataPath, self.__V, self.__StartDate.strWeek())
+
+    if version == None:
+      version = self.__V
+
+    if week == 0:
+      week = self.__StartDate.Week()
+    if year == 0:
+      year = self.__StartDate.Year()
+
+    print("Ver: %d" % version)
+    FileName="%sTrades-V%02d-%4d-%02d.dat" % (self.__DataPath, version, year, week)
     print("Loading data from "+FileName, end='', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
-      return
+      return False
 
     with open(FileName, "r") as ins:
       for line in ins:
@@ -306,13 +320,16 @@ class MyRich:
           #print(str(v))
           self.__L.append(MyRich._BuildTuple(v[2], v[1], timestamp=v[0]))
 
-    print(" ..loaded %d entries" % len(self.__L))
- 
+    FirstEntry=MyTime(self.__L[0][0])
+    LastEntry =MyTime(self.__L[-1][0])
+    print(" ..loaded %d entries from %s (w %d) to %s (w %d)" % (len(self.__L), FirstEntry.str(), FirstEntry.Week(), LastEntry.str(), LastEntry.Week()))
+    return True
+
   def SaveList(self, version=None):
     #I=self.__A.getInfo()
     #SrvTm = MyTime(I['return']['server_time'])
   
-    if not version:
+    if version == None:
       version = self.__V
 
     if version == 0: 
@@ -327,14 +344,15 @@ class MyRich:
 
     if version == 1:
       print("Saving File version "+str(version))
-      FirstDate = MyTime(self.__L[0][0])
-      wk1 = FirstDate.Week()
-      wk2 = self.__StartDate.Week()
+      FirstEntry=MyTime(self.__L[0][0])
+      LastEntry =MyTime(self.__L[-1][0])
+      wk1 = FirstEntry.Week()
+      wk2 = LastEntry.Week()
       if wk1 != wk2:
-        print("  FirstDate wk: %d != %d (this week)" % (wk1, wk2))
+        print("  First entry wk: %d != %d last entry" % (wk1, wk2))
         
-        FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstDate.strWeek())
-        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.strWeek())
+        FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstEntry.strWeek())
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.strWeek())
          
         L1 = list(filter(lambda v: MyTime(v[0]).Week() == wk1, self.__L))
         LN = list(filter(lambda v: MyTime(v[0]).Week() != wk1, self.__L))
@@ -375,9 +393,15 @@ class MyRich:
     
     self.SaveList()
 
-  def ConvertData_V0toV1(self):
-    self.LoadList()
-    self.SaveList(1)
+  def ConvertData_v0to1(self, week=0, year=0):
+    if self.LoadList(version=0, week=week, year=year):
+      self.SaveList(version=1)
+
+  def FuncTest(self):
+    # load V0 with different weeks -> save to different files
+    if self.LoadList(version=0, week=13, year=2017):
+      self.SaveList(version=1)
+
 
 ###########################################################################
 
@@ -404,7 +428,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList()
+    self.LoadList(version=0, week=13)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -419,12 +443,12 @@ class MyRich:
     #print("List from dsh_eur")
   
     L=self.GetPriceList("dsh_btc")
-    for v in L:
+    #for v in L:
       #print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
-      print(str(v))
+      #print(str(v))
 
 
-    self.SaveList(1)
+    #self.SaveList(1)
 
     #self.TestSaveV1()
       
@@ -440,38 +464,52 @@ def main(argv=None):
 
     mode=""
     DataPath=""
+    week=0 # 0 is this week
+    year=0 # 0 is this year 
 
     if len(argv) > 1:
       for arg in argv:
+        if arg == "functest":
+          mode = "functest"
+          DataPath="FuncTests/"
         if arg == "crawler":
           mode = "crawler"
         if arg == "v0to1":
           mode = "v0to1"
+        if "week" in arg:
+          s = arg.split("=")
+          week=int(s[1])
+        if "year" in arg:
+          s = arg.split("=")
+          year=int(s[1])
         if "path" in arg:
           s = arg.split("=")
           DataPath=s[1]+"/"
         if arg == "help":
           print("Usage:")
-          print("  %s [crawler] [path=/DATA_PATH] [help] [v0to1]" % argv[0])
+          print("  %s [help] [path=/DATA_PATH] [functest] [crawler] [v0to1] [year=0] [week=0]" % argv[0])
           exit(0)
    
     R = MyRich(Keys, DataPath)
     
     #R.Info()
-    
-    if mode == "crawler":
+    if mode == "functest":
+      R.FuncTest() 
+    elif mode == "crawler":
       R.Crawler()
     elif mode == "v0to1":
-      R.ConvertData_V0toV1()
+      R.ConvertData_v0to1(week, year)
     else:
       R.Test()
     
     
-    EndTime=datetime.datetime.now().timestamp()
+    #EndTime=datetime.datetime.now().timestamp()
     
-    print("%d seconds" % (EndTime-StartTime))
-    print("Overall: ", end='')
-    D.PrintDiff()
+    #print("%d seconds" % (EndTime-StartTime))
+    #print("Overall: ", end='')
+    #D.PrintDiff()
+    print("-----------------------------------------------------------------------------")
+    R.PrintEllapsed("Overall") 
     print("=============================================================================")
     
 
