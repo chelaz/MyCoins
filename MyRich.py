@@ -363,7 +363,7 @@ class MyRich:
         f.close()
       else:
         LN = self.__L
-        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, self.__StartDate.StrWeek())
+        FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
 
       print("Saving data (%d entries) to %s" %(len(LN), FileNameWk2)) 
 #      for v in LN:
@@ -401,7 +401,9 @@ class MyRich:
     if self.LoadList(version=1, week=14, year=2017):
       self.SaveList(version=1)
 
-
+  def InfoMode(self, week=0, year=0, version=0):
+    self.LoadList(version=version, week=week, year=year)
+ 
 ###########################################################################
 
   def TestSaveV1(self):
@@ -461,16 +463,22 @@ def main(argv=None):
     DataPath=""
     week=0 # 0 is this week
     year=0 # 0 is this year 
+    version=0
 
     if len(argv) > 1:
       for arg in argv:
         if arg == "functest":
           mode = "functest"
           DataPath="FuncTests/"
+        if arg == "info":
+          mode = "info"
         if arg == "crawler":
           mode = "crawler"
         if arg == "v0to1":
           mode = "v0to1"
+        if "version" in arg:
+          s = arg.split("=")
+          version=int(s[1])
         if "week" in arg:
           s = arg.split("=")
           week=int(s[1])
@@ -482,7 +490,7 @@ def main(argv=None):
           DataPath=s[1]+"/"
         if arg == "help":
           print("Usage:")
-          print("  %s [help] [path=/DATA_PATH] [functest] [crawler] [v0to1] [year=0] [week=0]" % argv[0])
+          print("  %s [help] [path=/DATA_PATH] [info] [functest] [crawler] [v0to1] [version=0] [year=0] [week=0]" % argv[0])
           exit(0)
    
     R = MyRich(Keys, DataPath)
@@ -498,6 +506,8 @@ def main(argv=None):
       R.Crawler()
     elif mode == "v0to1":
       R.ConvertData_v0to1(week, year)
+    elif mode == "info":
+      R.InfoMode(week, year, version)
     else:
       R.Test()
     
