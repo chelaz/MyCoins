@@ -319,6 +319,9 @@ class MyRich:
     FirstEntry=MyTime(self.__L[0][0])
     LastEntry =MyTime(self.__L[-1][0])
     print(" ..loaded %d entries from %s (w %d) to %s (w %d)" % (len(self.__L), FirstEntry.Str(), FirstEntry.Week(), LastEntry.Str(), LastEntry.Week()))
+    
+    self.__L=sorted(self.__L, key=self._SortByTimestamp)
+ 
     return True
 
   def SaveList(self, version=None):
@@ -346,7 +349,10 @@ class MyRich:
       wk2 = LastEntry.Week()
       if wk1 != wk2:
         print("  First entry wk: %d != %d last entry" % (wk1, wk2))
-        
+
+        self.LoadList(version=version, week=wk1, year=FirstEntry.Year())
+        self.LoadList(version=version, week=wk2, year=LastEntry.Year())
+                
         FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstEntry.StrWeek())
         FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
          
@@ -402,6 +408,8 @@ class MyRich:
       self.SaveList(version=1)
 
   def InfoMode(self, week=0, year=0, version=0):
+    if version == 0:
+      version = self.__V
     self.LoadList(version=version, week=week, year=year)
  
 ###########################################################################
