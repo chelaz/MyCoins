@@ -309,6 +309,9 @@ class MyRich:
 
     with open(FileName, "r") as ins:
       for line in ins:
+        if line.lstrip()[0] == '#':
+          print("  "+line.lstrip(), end='')
+          continue
         v=json.loads(line)
         if (len(v) == 4): # V0
           self.__L.append(MyRich._BuildTuple(v[3], v[2]))
