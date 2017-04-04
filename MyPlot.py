@@ -51,10 +51,14 @@ def ConfigPlot(couple):
 
  
 
-R = MyRich(Keys, "Trades/")
+R = MyRich(Keys, "Trades/mypi2/")
 #R.Info()
 
-R.LoadList()
+R.LoadList(week=12)
+R.LoadList(week=13)
+R.LoadList(week=14)
+
+
 #R.RecPublicTrades("dsh_eur", 10)
 
 R.PrintElapsed("Load")
