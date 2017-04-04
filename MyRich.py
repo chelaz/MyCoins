@@ -77,6 +77,9 @@ class MyRich:
 
   def __init__(self, Keys, DataPath=""):
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
+    self.SetDataPath(DataPath)
+
+  def SetDataPath(self, DataPath):
     self.__DataPath=DataPath
 
   def PrintElapsed(self, Str=""):
@@ -302,26 +305,35 @@ class MyRich:
       year = self.__StartDate.Year()
 
     FileName="%sTrades-V%02d-%4d-%02d.dat" % (self.__DataPath, version, year, week)
-    print("Loading data from "+FileName, end='', flush=True) 
+    print("Loading data from "+FileName, end='\n  ', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
       return False
 
+#    tid_L=list(map(lambda v : v[2]['tid'], self.__L))
+
     with open(FileName, "r") as ins:
       for line in ins:
-        if line.lstrip()[0] == '#':
-          print("  "+line.lstrip(), end='')
+#        if line.lstrip()[0] == '#':
+        if line[0] == '#':
+          print(line.lstrip(), end='')
+          print("  ",end='')
           continue
         v=json.loads(line)
         if (len(v) == 4): # V0
           self.__L.append(MyRich._BuildTuple(v[3], v[2]))
         if (len(v) == 3): # V1
-          #print(str(v))
+#          if v[2]['tid'] in tid_L:
+#            print("  Skipping: "+str(v[2]))
+#          else:
           self.__L.append(MyRich._BuildTuple(v[2], v[1], timestamp=v[0]))
+#          tid_L.append(v[2]['tid'])
+        if (len(self.__L) % 100000 == 0):
+          print("[%d] " % len(self.__L), end='', flush=True)
 
     FirstEntry=MyTime(self.__L[0][0])
     LastEntry =MyTime(self.__L[-1][0])
-    print(" ..loaded %d entries from %s (w %d) to %s (w %d)" % (len(self.__L), FirstEntry.Str(), FirstEntry.Week(), LastEntry.Str(), LastEntry.Week()))
+    print(" ..loaded %d entries from %s (w %d) to %s (w %d)\n" % (len(self.__L), FirstEntry.Str(), FirstEntry.Week(), LastEntry.Str(), LastEntry.Week()))
     
     self.__L=sorted(self.__L, key=self._SortByTimestamp)
  
@@ -366,7 +378,14 @@ class MyRich:
 #        for v in L1:
 #          print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
 #          print(str(v))
+
+        L1_FirstEntry=MyTime(L1[0][0])
+        L1_LastEntry =MyTime(L1[-1][0])
+
         f=open(FileNameWk1, "w")
+        f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(L1), \
+                                                                                 L1_FirstEntry.Str(), L1_FirstEntry.Week(), L1_FirstEntry.Timestamp(),\
+                                                                                 L1_LastEntry.Str(),  L1_LastEntry.Week(),  L1_LastEntry.Timestamp()))
         for v in L1:
           f.write(json.dumps(v)+"\n")
         f.close()
@@ -374,11 +393,17 @@ class MyRich:
         LN = self.__L
         FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
 
+      LN_FirstEntry=MyTime(LN[0][0])
+      LN_LastEntry =MyTime(LN[-1][0])
+
       print("Saving data (%d entries) to %s" %(len(LN), FileNameWk2)) 
 #      for v in LN:
 #        print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
 #        print(str(v))
       f=open(FileNameWk2, "w")
+      f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(LN), \
+                                                                                 LN_FirstEntry.Str(), LN_FirstEntry.Week(), LN_FirstEntry.Timestamp(),\
+                                                                                 LN_LastEntry.Str(),  LN_LastEntry.Week(),  LN_LastEntry.Timestamp()))
       for v in LN:
         f.write(json.dumps(v)+"\n")
       f.close()
@@ -404,10 +429,13 @@ class MyRich:
 
   def FuncTest(self):
     # load V0 with different weeks -> save to different files
+    self.SetDataPath("FuncTests/")
     if self.LoadList(version=0, week=13, year=2017):
+      self.SetDataPath("FuncTests/results/")
       self.SaveList(version=1)
     self.CleanHist()
     if self.LoadList(version=1, week=14, year=2017):
+      self.SetDataPath("FuncTests/results/")
       self.SaveList(version=1)
 
   def InfoMode(self, week=0, year=0, version=0):
