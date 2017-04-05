@@ -66,21 +66,29 @@ class MyTime:
 
 
 class MyRich:
+  # cmd line args
+  week=0 # 0 is this week
+  year=0 # 0 is this year 
+  version=0
 
+  # data member
   __A = None  # Instance of BTCeAPI
   __L = []    # Trades History
   __F = []    # Funds
   __V = 1     # File Version
 
-  __StartDate = MyTime()
   __DataPath = ""
+  __StartDate = MyTime()
 
-  def __init__(self, Keys, DataPath=""):
+  # functions
+  def __init__(self, Keys):
     self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
-    self.SetDataPath(DataPath)
 
   def SetDataPath(self, DataPath):
-    self.__DataPath=DataPath
+    if DataPath[-1] != '/':
+      self.__DataPath=DataPath+"/"
+    else:
+      self.__DataPath=DataPath
 
   def PrintElapsed(self, Str=""):
     print("_> ", end='')
@@ -429,19 +437,58 @@ class MyRich:
 
   def FuncTest(self):
     # load V0 with different weeks -> save to different files
-    self.SetDataPath("FuncTests/")
+    self.SetDataPath("FuncTests")
     if self.LoadList(version=0, week=13, year=2017):
-      self.SetDataPath("FuncTests/results/")
+      self.SetDataPath("FuncTests/results")
       self.SaveList(version=1)
     self.CleanHist()
     if self.LoadList(version=1, week=14, year=2017):
-      self.SetDataPath("FuncTests/results/")
+      self.SetDataPath("FuncTests/results")
       self.SaveList(version=1)
 
-  def InfoMode(self, week=0, year=0, version=0):
-    if version == 0:
+  def InfoMode(self, week=0, year=0, version=None):
+    if version == None:
       version = self.__V
     self.LoadList(version=version, week=week, year=year)
+
+  def ParseCmdLineArgs(self, argv, modes):
+    mode=""
+    #week=0 # 0 is this week
+    #year=0 # 0 is this year 
+    #version=0
+
+    if len(argv) > 1:
+      for arg in argv:
+
+        if arg in modes:
+          mode = arg
+
+        if "version" in arg:
+          s = arg.split("=")
+          MyRich.version=int(s[1])
+
+        if "week" in arg:
+          s = arg.split("=")
+          MyRich.week=int(s[1])
+
+        if "year" in arg:
+          s = arg.split("=")
+          MyRich.year=int(s[1])
+
+        if "path" in arg:
+          s = arg.split("=")
+          self.SetDataPath(s[1])
+
+        if arg == "help":
+          ModeStr=""
+          for m in modes:
+            ModeStr = ModeStr+" ["+m+"]"
+           
+          print("Usage:")
+          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [week=0]" % (argv[0], ModeStr))
+          mode="help"
+
+    return mode
  
 ###########################################################################
 
@@ -498,41 +545,48 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
+    R = MyRich(Keys)
+
     mode=""
-    DataPath=""
-    week=0 # 0 is this week
-    year=0 # 0 is this year 
-    version=0
+#    DataPath=""
+#    week=0 # 0 is this week
+#    year=0 # 0 is this year 
+#    version=0
 
     if len(argv) > 1:
-      for arg in argv:
-        if arg == "functest":
-          mode = "functest"
-          DataPath="FuncTests/"
-        if arg == "info":
-          mode = "info"
-        if arg == "crawler":
-          mode = "crawler"
-        if arg == "v0to1":
-          mode = "v0to1"
-        if "version" in arg:
-          s = arg.split("=")
-          version=int(s[1])
-        if "week" in arg:
-          s = arg.split("=")
-          week=int(s[1])
-        if "year" in arg:
-          s = arg.split("=")
-          year=int(s[1])
-        if "path" in arg:
-          s = arg.split("=")
-          DataPath=s[1]+"/"
-        if arg == "help":
-          print("Usage:")
-          print("  %s [help] [path=/DATA_PATH] [info] [functest] [crawler] [v0to1] [version=0] [year=0] [week=0]" % argv[0])
-          exit(0)
+      modes = ["functest", "info", "crawler", "v0to1"]
+      mode=R.ParseCmdLineArgs(argv, modes)
+
+    if mode == "help":
+      exit(0)
+
+#      for arg in argv:
+#        if arg == "functest":
+#          mode = "functest"
+#          DataPath="FuncTests/"
+#        if arg == "info":
+#          mode = "info"
+#        if arg == "crawler":
+#          mode = "crawler"
+#        if arg == "v0to1":
+#          mode = "v0to1"
+#        if "version" in arg:
+#          s = arg.split("=")
+#          version=int(s[1])
+#        if "week" in arg:
+#          s = arg.split("=")
+#          week=int(s[1])
+#        if "year" in arg:
+#          s = arg.split("=")
+#          year=int(s[1])
+#        if "path" in arg:
+#          s = arg.split("=")
+#          DataPath=s[1]+"/"
+#        if arg == "help":
+#          print("Usage:")
+#          print("  %s [help] [path=/DATA_PATH] [info] [functest] [crawler] [v0to1] [version=0] [year=0] [week=0]" % argv[0])
+#          exit(0)
    
-    R = MyRich(Keys, DataPath)
     
     print("=============================================================================")
     print("%s started in mode %s\tTS: %d (%s)" % (argv[0], mode, R.GetStartDate().Timestamp(), R.GetStartDate().Str()))
@@ -544,9 +598,9 @@ def main(argv=None):
     elif mode == "crawler":
       R.Crawler()
     elif mode == "v0to1":
-      R.ConvertData_v0to1(week, year)
+      R.ConvertData_v0to1(MyRich.week, MyRich.year)
     elif mode == "info":
-      R.InfoMode(week, year, version)
+      R.InfoMode(MyRich.week, MyRich.year, MyRich.version)
     else:
       R.Test()
     
