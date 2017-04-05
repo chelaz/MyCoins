@@ -165,11 +165,51 @@ class MyRich:
     #D.PrintDiff()
     return L
 
+  # (ts, price, amount)
   def GetPriceList(self, couple):
     return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']), filter(lambda v : v[1] == couple, self.__L)))
 #    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
 
+ 
+  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  def BuildMinMaxList2(self, couple, winsize):
 
+    Debug=False
+
+    L=self.GetPriceList(couple)
+
+    L2=L[winsize:]
+    
+    #if Debug:
+    #  print("Starting List from %d" % L2[0])
+    
+    MMList = []
+
+    for i in range(len(L2)):
+      v=L2[i]
+      min=v[1]
+      max=v[1]
+      sum=v[2]
+      cnt=1
+      
+      for j in range(winsize):
+        w=L[j+i+1]
+        if Debug:
+          print(" [%d] ts %d val: %f amount: %f" % (j+i+1, w[0], w[1], w[2])) 
+        if min > w[1]:
+          min=w[1]
+        if max < w[1]:
+          max=w[1]
+        sum += w[2]
+        cnt += 1
+
+      if Debug:
+        print("[%2d] ts %f min: %f max: %f sum: %f cnt: %d" % (i+winsize, v[0], min, max, sum, cnt))
+ 
+      MMList.append([v[0], {'min':min, 'max':max, 'amount':sum , 'cnt':cnt }])
+  
+    return MMList
+     
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def BuildMinMaxList(self, couple, bucket_seconds):
 
@@ -257,7 +297,7 @@ class MyRich:
   
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, BucSec, Percentage=False):
-    L=self.BuildMinMaxList(couple, BucSec)
+    L=self.BuildMinMaxList2(couple, BucSec)
     factor=1.0
 
     if Percentage:
@@ -515,7 +555,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList(version=0, week=13)
+    self.LoadList(week=14)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -524,12 +564,12 @@ class MyRich:
 
     #C=self.GetListFromCouple("dsh_eur")
     
-    #L=self.BuildMinMaxList("dsh_usd", 100)
+    L=self.BuildMinMaxList2("dsh_btc", 5)
     
     #L=self.__GetPlotList(C) 
     #print("List from dsh_eur")
   
-    L=self.GetPriceList("dsh_btc")
+    #L=self.GetPriceList("dsh_btc")
     #for v in L:
       #print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
       #print(str(v))

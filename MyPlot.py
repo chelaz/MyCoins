@@ -84,19 +84,20 @@ couple_de="dsh_eur"
 couple_ee="eth_eur"
 
 
-plt.subplot(3,1,1)
-DoPlot(R, couple_db, 'b-', ConsiderBalance=False, Percentage=True)
-DoPlot(R, couple_de, 'g-', ConsiderBalance=False, Percentage=True)
-ConfigPlot(couple_db)
+#plt.subplot(3,1,1)
+#DoPlot(R, couple_db, 'b-', ConsiderBalance=False, Percentage=True)
+#DoPlot(R, couple_de, 'g-', ConsiderBalance=False, Percentage=True)
+#ConfigPlot(couple_db)
+#
+#plt.subplot(3,1,2)
+#DoPlot(R, couple_eb, 'r-', ConsiderBalance=False, Percentage=True)
+#DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
+#ConfigPlot(couple_eb)
 
-plt.subplot(3,1,2)
-DoPlot(R, couple_eb, 'r-', ConsiderBalance=False, Percentage=True)
-DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
-ConfigPlot(couple_eb)
-
-plt.subplot(3,1,3)
-MMPlot=R.GetMMPlot(couple_ee, 15*60, Percentage=True)
-plt.plot(*MMPlot[0], 'b-', *MMPlot[1],'r-') 
+#plt.subplot(3,1,3)
+MMPlot=R.GetMMPlot(couple_ee, 1*60, Percentage=False)
+plt.plot(*MMPlot[0], 'g-', *MMPlot[1],'r-') 
+DoPlot(R, couple_ee, 'b-', Percentage=False)
 ConfigPlot(couple_ee)
 
 
