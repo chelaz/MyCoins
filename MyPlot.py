@@ -11,6 +11,7 @@ import matplotlib.dates  as mdates
 import matplotlib.ticker as mticker
 
 import datetime
+import sys
 
 def timestampToDayMonth(x, pos):
   if not pos:
@@ -51,12 +52,23 @@ def ConfigPlot(couple):
 
  
 
-R = MyRich(Keys, "Trades/mypi2/")
+R = MyRich(Keys)
+
+if len(sys.argv) > 1:
+  modes = ["plot"]
+  mode=R.ParseCmdLineArgs(sys.argv, modes)
+
+  if mode == "help":
+    exit(0)
+
+
+
 #R.Info()
 
-R.LoadList(week=12)
-R.LoadList(week=13)
-R.LoadList(week=14)
+if not R.LoadList(week=MyRich.week):
+  exit(0)
+#R.LoadList(week=13)
+#R.LoadList(week=14)
 
 
 #R.RecPublicTrades("dsh_eur", 10)
