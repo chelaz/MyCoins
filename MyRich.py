@@ -24,7 +24,7 @@ import sys
 
 from btceapi import api
 from Keys import Keys
-
+from MyTrade import MyTrade
 
 class MyTime:
   __datetime = None
@@ -269,9 +269,14 @@ class MyRich:
 
 
 ### Simulate Trading functions
-  def SimulateTrading(self, couple):
+
+  # T is of type MyTrade
+  def SimulateTrading(self, T, couple):
 
     Debug=True
+
+    if Debug:
+      T.PrintBalance()
 
     L=self.GetPriceList(couple)
 
@@ -290,15 +295,18 @@ class MyRich:
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
+        T.PlaceOrder(v[1], 0.1, "dsh_btc")
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
+        T.PlaceOrder(0.1, v[1], "btc_dsh")
 
       if Debug:
         print("MMList for %d" % i)
         for v in MMList:
           print("  "+str(v))
 
+    T.PrintBalance()
 
 ### Plot functions
 
@@ -597,7 +605,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList(week=14)
+    self.LoadList(week=13)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -608,7 +616,16 @@ class MyRich:
     
     #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
     
-    self.SimulateTrading("dsh_btc")
+
+    
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+  
+    T.PrintBalance()
+
+    #T.PlaceOrder( 0.08, 1, "dsh_btc")
+
+    self.SimulateTrading(T, "dsh_btc")
+
 
     #L=self.__GetPlotList(C) 
     #print("List from dsh_eur")
