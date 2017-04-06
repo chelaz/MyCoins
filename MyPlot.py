@@ -34,11 +34,14 @@ def timestampToHrsMin(x, pos):
 
 def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
   currency=couple.split('_')[0]
+  lines = None
 
   if ConsiderBalance:
-    plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
+    lines = plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
   else:
-    plt.plot(*R.GetPlot(couple, 1.0, Percentage), fmt) 
+    lines = plt.plot(*R.GetPlot(couple, 1.0, Percentage), fmt) 
+
+  plt.setp(lines, linewidth=0.5)
 
 def ConfigPlot(couple):
   ax=plt.gca()
@@ -94,11 +97,14 @@ couple_ee="eth_eur"
 #DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
 #ConfigPlot(couple_eb)
 
+couple=couple_db
+#couple=couple_ee
 #plt.subplot(3,1,3)
-MMPlot=R.GetMMPlot(couple_ee, 1*60, Percentage=False)
-plt.plot(*MMPlot[0], 'g-', *MMPlot[1],'r-') 
-DoPlot(R, couple_ee, 'b-', Percentage=False)
-ConfigPlot(couple_ee)
+MMPlot=R.GetMMPlot(couple, 1*60, Percentage=False)
+lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
+plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+DoPlot(R, couple, 'b-', Percentage=False)
+ConfigPlot(couple)
 
 
 
