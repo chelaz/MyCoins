@@ -517,6 +517,16 @@ class MyRich:
     if self.LoadList(version=1, week=14, year=2017):
       self.SetDataPath("FuncTests/results")
       self.SaveList(version=1)
+ 
+    self.CleanHist()
+    self.SetDataPath("FuncTests")
+    if self.LoadList(version=1, week=14, year=2016):
+      L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
+      print("MMList")
+      for v in L:
+        print("  "+str(v))
+
+      
 
   def InfoMode(self, week=0, year=0, version=None):
     if version == None:
