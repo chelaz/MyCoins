@@ -169,14 +169,14 @@ class MyRich:
   def GetPriceList(self, couple):
     return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']), filter(lambda v : v[1] == couple, self.__L)))
 #    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
+    
 
- 
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  def BuildMinMaxList2(self, couple, winsize):
+  def BuildMinMaxList2(self, PriceList, winsize):
 
     Debug=False
 
-    L=self.GetPriceList(couple)
+    L=PriceList #self.GetPriceList(couple)
 
     L2=L[winsize:]
     
@@ -268,6 +268,38 @@ class MyRich:
     return MMList       
 
 
+### Simulate Trading functions
+  def SimulateTrading(self, couple):
+
+    Debug=True
+
+    L=self.GetPriceList(couple)
+
+    WinSize=10
+
+    for i in range(len(L)):
+      v = L[i]
+      #v is last traded value
+
+      if i <= WinSize:
+        continue
+
+      LastL = L[i-WinSize-1:i]
+
+      MMList = self.BuildMinMaxList2(LastL, WinSize)
+
+      if v[1] < MMList[0][1]['min']:
+        print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
+
+      if v[1] > MMList[0][1]['max']:
+        print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
+
+      if Debug:
+        print("MMList for %d" % i)
+        for v in MMList:
+          print("  "+str(v))
+
+
 ### Plot functions
 
   # obsolete
@@ -297,7 +329,7 @@ class MyRich:
   
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, BucSec, Percentage=False):
-    L=self.BuildMinMaxList2(couple, BucSec)
+    L=self.BuildMinMaxList2(self.GetPriceList(couple), BucSec)
     factor=1.0
 
     if Percentage:
@@ -564,8 +596,10 @@ class MyRich:
 
     #C=self.GetListFromCouple("dsh_eur")
     
-    L=self.BuildMinMaxList2("dsh_btc", 5)
+    #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
     
+    self.SimulateTrading("dsh_btc")
+
     #L=self.__GetPlotList(C) 
     #print("List from dsh_eur")
   
