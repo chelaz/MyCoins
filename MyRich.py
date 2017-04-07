@@ -296,20 +296,22 @@ class MyRich:
       if i <= WinSize:
         continue
 
+      T.FillOrders(v[1], ts=v[0], age=WinSize)
+
       LastL = L[i-WinSize-1:i]
 
       MMList = self.BuildMinMaxList2(LastL, WinSize)
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        if T.PlaceOrderBid(v[1], val, couple) == 0.0:
+        if T.PlaceOrderBid(v[1], val, couple, ts=v[0]) == 0.0:
           bankrupt_counter_sell += 1
         else:
           cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        if T.PlaceOrderAsk(v[1], val, couple) == 0.0:
+        if T.PlaceOrderAsk(v[1], val, couple, ts=v[0]) == 0.0:
           bankrupt_counter_buy += 1
         else:
           cnt_ask+=1
@@ -625,7 +627,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList(week=13)
+    self.LoadList(week=14)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -643,10 +645,15 @@ class MyRich:
   
     T.PrintBalance()
 
-#    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc")
+    #T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
     #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc")
 
-#    T.PrintBalance()
+    #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
+ 
+    #T.FillOrders(0.07, ts=14, age=1)
+
+    #T.PrintBalance()
+
 
 #    T.PlaceOrderBid( 0.03455, 0.6,  "eth_btc")
 #    T.PlaceOrderBid( 0.08, 0.24,  "dsh_btc")

@@ -6,10 +6,38 @@ import sys
 class MyTrade:
 
   __F = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
+  __O = []   # Orders
 
   def __init__(self, StartBalance = { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 } ):
     self.__StartBalance = dict(StartBalance) # explicit copy of fund
     self.__F = StartBalance
+
+  # {'type':'ask', 'price':price, 'amount':amount, 'couple':couple}
+  # ts is current timestamp, age is cur ts minus place order ts
+  def FillOrders(self, price, age=0, ts=0):
+    Debug=True
+    if Debug:
+      print("FillOrders")
+
+    OrdersOutdated=[]
+    for o in self.__O:
+      if Debug:
+        print("  "+str(o))
+      if age > 0 and ts > 0:
+        if ts-o['ts'] > age:
+          OrdersOutdated.append(o)
+          continue
+      if o['type'] == 'ask':
+        if o['price'] > price:
+          self.FillOrderAsk(price, o['amount'], o['couple'])
+      else:
+        if o['price'] < price:
+          self.FillOrderBid(price, o['amount'], o['couple'])
+
+    for o in OrdersOutdated:
+      if Debug:
+        print("  ->remove order due to age %d:" % (ts-o['ts']) +str(o))
+      self.__O.remove(o)
 
   def PrintBalance(self):
     print("Balance")
@@ -21,8 +49,14 @@ class MyTrade:
     for f in self.__StartBalance:
       print("  %s: %f" % (f, self.__StartBalance[f]))
 
+  def PlaceOrderAsk(self, price, amount, couple, ts=0):
+    self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts})
+
+  def PlaceOrderBid(self, price, amount, couple, ts=0):
+    self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts})
+     
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
-  def PlaceOrderAsk(self, price, amount, couple):
+  def FillOrderAsk(self, price, amount, couple):
     cur=couple.split('_')
     cur_ask  = cur[0]  # dsh
     cur_sell = cur[1]  # btc
@@ -36,7 +70,7 @@ class MyTrade:
 
     print("  Sold %f %s for %f %s at exchange rate %f %s/%s" % (sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
 
-  def PlaceOrderBid(self, price, amount, couple):
+  def FillOrderBid(self, price, amount, couple):
     cur=couple.split('_')
     cur_bid = cur[0] # dsh gets less
     cur_buy = cur[1] # btc gets more
@@ -71,9 +105,9 @@ class MyTrade:
     self.PrintBalance()
 
     if self.__StartBalance[cur_buy] > self.__F[cur_buy]:
-      self.PlaceOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple)
+      self.FillOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple)
     else:
-      self.PlaceOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple)
+      self.FillOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple)
 
 
     self.PrintBalance()
