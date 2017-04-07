@@ -319,7 +319,8 @@ class MyRich:
         for v in MMList:
           print("  "+str(v))
 
-    T.SellAll(L[-1][1], couple)
+    T.SellToEqualizeStartBalance(L[-1][1], couple)
+    #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
     print("  Bankrupt sell: %d buy: %d" % (bankrupt_counter_sell, bankrupt_counter_buy))
     print("  asked %d,  bid %d" % (cnt_ask, cnt_bid))
@@ -638,7 +639,7 @@ class MyRich:
 
     
   #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
-    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 0.0 }) 
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
   
     T.PrintBalance()
 

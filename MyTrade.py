@@ -61,4 +61,23 @@ class MyTrade:
     self.PlaceOrderBid(price, self.__F[cur_buy], couple)
 
     self.PrintBalance()
-    
+
+  def SellToEqualizeStartBalance(self, price, couple):
+    cur=couple.split('_')
+    cur_buy  = cur[0]
+    cur_sell = cur[1]
+ 
+    print("Sell to equalize")
+    self.PrintBalance()
+
+    if self.__StartBalance[cur_buy] > self.__F[cur_buy]:
+      self.PlaceOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple)
+    else:
+      self.PlaceOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple)
+
+
+    self.PrintBalance()
+
+                              
+
+        
