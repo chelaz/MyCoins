@@ -273,7 +273,7 @@ class MyRich:
   # T is of type MyTrade
   def SimulateTrading(self, T, couple):
 
-    val=0.001
+    val=0.01
 
     Debug=True
 
@@ -282,7 +282,12 @@ class MyRich:
 
     L=self.GetPriceList(couple)
 
-    WinSize=10
+    WinSize=100
+
+    bankrupt_counter_sell=0
+    bankrupt_counter_buy=0
+    cnt_bid=0
+    cnt_ask=0
 
     for i in range(len(L)):
       v = L[i]
@@ -297,20 +302,29 @@ class MyRich:
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        T.PlaceOrderBid(v[1], val, couple)
+        if T.PlaceOrderBid(v[1], val, couple) == 0.0:
+          bankrupt_counter_sell += 1
+        else:
+          cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        T.PlaceOrderAsk(v[1], val, couple)
+        if T.PlaceOrderAsk(v[1], val, couple) == 0.0:
+          bankrupt_counter_buy += 1
+        else:
+          cnt_ask+=1
 
       if Debug:
         print("MMList for %d" % i)
         for v in MMList:
           print("  "+str(v))
 
-    T.PrintBalance()
-
     T.SellAll(L[-1][1], couple)
+    print("\n-------------------------------------\nSimulation Summary:");
+    print("  Bankrupt sell: %d buy: %d" % (bankrupt_counter_sell, bankrupt_counter_buy))
+    print("  asked %d,  bid %d" % (cnt_ask, cnt_bid))
+    T.PrintStartBalance()
+    T.PrintBalance()
 
 
 ### Plot functions
@@ -629,7 +643,7 @@ class MyRich:
     T.PrintBalance()
 
 #    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc")
-#    T.PlaceOrderAsk( 0.03455, 0.6,  "eth_btc")
+    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc")
 
 #    T.PrintBalance()
 
@@ -641,8 +655,6 @@ class MyRich:
     #T.SellAll(0.08,    "dsh_btc")
 
     self.SimulateTrading(T, "eth_btc")
-
-    T.PrintStartBalance()
 
 
     #L=self.__GetPlotList(C) 
