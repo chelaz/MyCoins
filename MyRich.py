@@ -273,6 +273,8 @@ class MyRich:
   # T is of type MyTrade
   def SimulateTrading(self, T, couple):
 
+    val=0.001
+
     Debug=True
 
     if Debug:
@@ -295,11 +297,11 @@ class MyRich:
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        T.PlaceOrder(v[1], 0.1, "dsh_btc")
+        T.PlaceOrderBid(v[1], val, couple)
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        T.PlaceOrder(0.1, v[1], "btc_dsh")
+        T.PlaceOrderAsk(v[1], val, couple)
 
       if Debug:
         print("MMList for %d" % i)
@@ -307,6 +309,9 @@ class MyRich:
           print("  "+str(v))
 
     T.PrintBalance()
+
+    T.SellAll(L[-1][1], couple)
+
 
 ### Plot functions
 
@@ -618,13 +623,26 @@ class MyRich:
     
 
     
-    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+  #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 0.0 }) 
   
     T.PrintBalance()
 
-    #T.PlaceOrder( 0.08, 1, "dsh_btc")
+#    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc")
+#    T.PlaceOrderAsk( 0.03455, 0.6,  "eth_btc")
 
-    self.SimulateTrading(T, "dsh_btc")
+#    T.PrintBalance()
+
+#    T.PlaceOrderBid( 0.03455, 0.6,  "eth_btc")
+#    T.PlaceOrderBid( 0.08, 0.24,  "dsh_btc")
+#    T.PrintBalance()
+
+    #T.SellAll(0.03455, "eth_btc")
+    #T.SellAll(0.08,    "dsh_btc")
+
+    self.SimulateTrading(T, "eth_btc")
+
+    T.PrintStartBalance()
 
 
     #L=self.__GetPlotList(C) 
