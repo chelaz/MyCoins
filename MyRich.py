@@ -289,37 +289,45 @@ class MyRich:
     cnt_bid=0
     cnt_ask=0
 
+    ts_prev=0
     for i in range(len(L)):
-      v = L[i]
+      v  = L[i]
       #v is last traded value
+      ts = v[0]
 
       if i <= WinSize:
+        ts_prev = ts
         continue
 
-      T.FillOrders(v[1], ts=v[0], age=WinSize)
+      T.FillOrders(v[1], ts=ts, age=WinSize)
 
       LastL = L[i-WinSize-1:i]
 
       MMList = self.BuildMinMaxList2(LastL, WinSize)
 
+      if ts == ts_prev:
+        continue
+
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        if T.PlaceOrderBid(v[1], val, couple, ts=v[0]) == 0.0:
+        if T.PlaceOrderBid(v[1], val, couple, ts=ts) == 0.0:
           bankrupt_counter_sell += 1
         else:
           cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        if T.PlaceOrderAsk(v[1], val, couple, ts=v[0]) == 0.0:
+        if T.PlaceOrderAsk(v[1], val, couple, ts=ts) == 0.0:
           bankrupt_counter_buy += 1
         else:
           cnt_ask+=1
 
-      if Debug:
-        print("MMList for %d" % i)
-        for v in MMList:
-          print("  "+str(v))
+      #if Debug:
+      #  print("MMList for %d" % i)
+      #  for v in MMList:
+      #    print("  "+str(v))
+
+      ts_prev = ts
 
     T.SellToEqualizeStartBalance(L[-1][1], couple)
     #T.SellAll(L[-1][1], couple)
@@ -533,6 +541,17 @@ class MyRich:
     
     self.SaveList()
 
+  def SimulateTradingAndPlot(self, couple):
+    
+    #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+  
+    self.SimulateTrading(T, couple)
+  
+    PLa=T.GetPlotHistAsk()
+    Plb=T.GetPlotHistBid()
+    return (PLa, Plb)
+
   def ConvertData_v0to1(self, week=0, year=0):
     if self.LoadList(version=0, week=week, year=year):
       self.SaveList(version=1)
@@ -613,7 +632,6 @@ class MyRich:
       print(str(v))
 
     self.SaveList(1)
-
 
 
   def Test(self):

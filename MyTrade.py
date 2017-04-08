@@ -5,9 +5,11 @@ import sys
 
 class MyTrade:
 
-  __F = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
-  __O = []   # Orders
-
+  __F  = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
+  __O  = []   # Orders
+  __Ha = []   # Orders History ask
+  __Hb = []   # Orders History bid
+   
   def __init__(self, StartBalance = { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 } ):
     self.__StartBalance = dict(StartBalance) # explicit copy of fund
     self.__F = StartBalance
@@ -30,9 +32,11 @@ class MyTrade:
       if o['type'] == 'ask':
         if o['price'] > price:
           self.FillOrderAsk(price, o['amount'], o['couple'])
+          self.__Ha.append([ts, price])
       else:
         if o['price'] < price:
           self.FillOrderBid(price, o['amount'], o['couple'])
+          self.__Hb.append([ts, price])
 
     for o in OrdersOutdated:
       if Debug:
@@ -49,6 +53,12 @@ class MyTrade:
     for f in self.__StartBalance:
       print("  %s: %f" % (f, self.__StartBalance[f]))
 
+  def GetPlotHistAsk(self):
+    return (list(map(lambda v:v[0], self.__Ha)), list(map(lambda v:v[1],self.__Ha)))
+ 
+  def GetPlotHistBid(self):
+    return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
+ 
   def PlaceOrderAsk(self, price, amount, couple, ts=0):
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts})
 
