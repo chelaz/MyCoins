@@ -299,7 +299,10 @@ class MyRich:
         ts_prev = ts
         continue
 
+      print("{%d} orders Ask=%d Bid=%d" % (ts, T.LenOrderBookAsk(), T.LenOrderBookBid()))
+
       T.FillOrders(v[1], ts=ts, age=WinSize)
+#      T.FillOrders(v[1], ts=ts)
 
       LastL = L[i-WinSize-1:i]
 

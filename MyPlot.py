@@ -58,7 +58,7 @@ def ConfigPlot(couple):
 R = MyRich(Keys)
 
 if len(sys.argv) > 1:
-  modes = ["plot"]
+  modes = ["plot", "simulate"]
   mode=R.ParseCmdLineArgs(sys.argv, modes)
 
   if mode == "help":
@@ -86,7 +86,13 @@ couple_eb="eth_btc"
 couple_de="dsh_eur"
 couple_ee="eth_eur"
 
-
+couple=couple_db
+#couple=couple_ee
+#
+if mode == "simulate":
+  AskBidPlots=R.SimulateTradingAndPlot(couple)
+  R.PrintElapsed("Simulate Trading")
+  
 #plt.subplot(3,1,1)
 #DoPlot(R, couple_db, 'b-', ConsiderBalance=False, Percentage=True)
 #DoPlot(R, couple_de, 'g-', ConsiderBalance=False, Percentage=True)
@@ -97,13 +103,17 @@ couple_ee="eth_eur"
 #DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
 #ConfigPlot(couple_eb)
 
-couple=couple_db
-#couple=couple_ee
 #plt.subplot(3,1,3)
 MMPlot=R.GetMMPlot(couple, 1*60, Percentage=False)
 lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
 plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 DoPlot(R, couple, 'b-', Percentage=False)
+#ConfigPlot(couple)
+
+if mode == "simulate":
+  linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go')
+  #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+
 ConfigPlot(couple)
 
 
