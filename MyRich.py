@@ -648,7 +648,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList(week=14)
+    #self.LoadList(week=14)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -666,14 +666,19 @@ class MyRich:
   
     T.PrintBalance()
 
-    #T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
-    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc")
+    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
+    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc", ts=15)
 
+    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
+ 
     #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
  
-    #T.FillOrders(0.07, ts=14, age=1)
+    T.FillOrders(0.1, ts=13, age=2)
 
-    #T.PrintBalance()
+    T.PrintHistAsk()
+    T.PrintHistBid()
+  
+    T.PrintBalance()
 
 
 #    T.PlaceOrderBid( 0.03455, 0.6,  "eth_btc")
@@ -683,7 +688,7 @@ class MyRich:
     #T.SellAll(0.03455, "eth_btc")
     #T.SellAll(0.08,    "dsh_btc")
 
-    self.SimulateTrading(T, "eth_btc")
+    #self.SimulateTrading(T, "eth_btc")
 
 
     #L=self.__GetPlotList(C) 
