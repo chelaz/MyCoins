@@ -31,6 +31,7 @@ class MyTrade:
     Ret=True
     ts    = self.__tmp_ts
     price = self.__tmp_price
+    print("CheckAndFillOrders ts %d price %f o %s" % (ts, price, str(o)))
     if o['type'] == 'ask':
       if o['price'] > price:
         self.FillOrderAsk(price, o['amount'], o['couple'], ts=ts)
@@ -70,11 +71,11 @@ class MyTrade:
       for o in OrdersRemovedOutdated:
         print("  "+str(o))
     
-    self.__O=filter(self.__CheckAndFillOrders, OrdersRemovedOutdated)
+    O=filter(self.__CheckAndFillOrders, OrdersRemovedOutdated)
  
     if Debug:
       print("OrdersNotFilled:")
-      for o in self.__O:
+      for o in O:
         print("  "+str(o))
  
 #    #OrdersOutdated=[] # or filled
