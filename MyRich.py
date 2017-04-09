@@ -673,7 +673,7 @@ class MyRich:
  
     #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
  
-    T.FillOrders(0.1, ts=13, age=2)
+    T.FillOrders(0.7, ts=13, age=2)
 
     T.PrintHistAsk()
     T.PrintHistBid()

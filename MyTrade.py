@@ -27,11 +27,14 @@ class MyTrade:
   def __CheckOutdated(self, o):
     return self.__tmp_ts-o['ts'] <= self.__tmp_age
 
+  def __CheckAndFillOrdersT(self, o):
+    return o['couple'] == "dsh_btc"
+ 
   def __CheckAndFillOrders(self, o):
     Ret=True
     ts    = self.__tmp_ts
     price = self.__tmp_price
-    print("CheckAndFillOrders ts %d price %f o %s" % (ts, price, str(o)))
+    #print("CheckAndFillOrders ts %d price %f o %s" % (ts, price, str(o)))
     if o['type'] == 'ask':
       if o['price'] > price:
         self.FillOrderAsk(price, o['amount'], o['couple'], ts=ts)
@@ -71,8 +74,8 @@ class MyTrade:
       for o in OrdersRemovedOutdated:
         print("  "+str(o))
     
-    O=filter(self.__CheckAndFillOrders, OrdersRemovedOutdated)
- 
+    O=filter(self.__CheckAndFillOrders, self.__O)
+
     if Debug:
       print("OrdersNotFilled:")
       for o in O:
