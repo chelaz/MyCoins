@@ -282,7 +282,7 @@ class MyRich:
 
     L=self.GetPriceList(couple)
 
-    WinSize=100
+    WinSize=50
 
     bankrupt_counter_sell=0
     bankrupt_counter_buy=0
@@ -299,7 +299,7 @@ class MyRich:
         ts_prev = ts
         continue
 
-      print("{%d} orders Ask=%d Bid=%d" % (ts, T.LenOrderBookAsk(), T.LenOrderBookBid()))
+      print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderBookAsk(), T.LenOrderBookBid(), T.LenOrderBook()))
 
       T.FillOrders(v[1], ts=ts, age=WinSize)
 #      T.FillOrders(v[1], ts=ts)
@@ -636,6 +636,23 @@ class MyRich:
 
     self.SaveList(1)
 
+  def TestFillTrades(self):
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+  
+    T.PrintBalance()
+
+    T.PlaceOrderAsk( 0.08,    0.2, "dsh_btc", ts=10)
+    T.PlaceOrderAsk( 0.06,    0.3, "dsh_btc", ts=11)
+    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
+    T.PlaceOrderAsk( 0.07,    0.5, "dsh_btc", ts=13)
+    T.PlaceOrderAsk( 0.04,    0.6, "dsh_btc", ts=14)
+ 
+    T.FillOrders(0.07, ts=15, age=3)
+
+    T.PrintHistAsk()
+    T.PrintHistBid()
+  
+    T.PrintBalance()
 
   def Test(self):
 
@@ -659,7 +676,8 @@ class MyRich:
     
     #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
     
-
+    self.TestFillTrades()
+    return
     
   #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
@@ -667,13 +685,17 @@ class MyRich:
     T.PrintBalance()
 
     T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
+    T.PlaceOrderAsk( 0.06,    0.24, "dsh_btc", ts=11)
+    T.PlaceOrderAsk( 0.09,    0.24, "dsh_btc", ts=12)
+    T.PlaceOrderAsk( 0.07,    0.24, "dsh_btc", ts=13)
+    T.PlaceOrderAsk( 0.04,    0.24, "dsh_btc", ts=14)
     #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc", ts=15)
 
     T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
  
     #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
  
-    T.FillOrders(0.07, ts=13, age=2)
+    T.FillOrders(0.07, ts=15, age=1)
 
     T.PrintHistAsk()
     T.PrintHistBid()

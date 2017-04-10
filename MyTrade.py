@@ -17,6 +17,9 @@ class MyTrade:
     self.__StartBalance = dict(StartBalance) # explicit copy of fund
     self.__F = StartBalance
 
+  def LenOrderBook(self):
+    return len(self.__O)
+
   def LenOrderBookAsk(self):
     return len(self.__Ha)
 
@@ -74,11 +77,11 @@ class MyTrade:
       for o in OrdersRemovedOutdated:
         print("  "+str(o))
     
-    O=filter(self.__CheckAndFillOrders, OrdersRemovedOutdated)
+    self.__O=list(filter(self.__CheckAndFillOrders, OrdersRemovedOutdated))
 
     if Debug:
       print("OrdersNotFilled:")
-      for o in O:
+      for o in self.__O:
         print("  "+str(o))
  
 #    #OrdersOutdated=[] # or filled
