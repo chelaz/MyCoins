@@ -488,6 +488,8 @@ class MyRich:
 
         self.LoadList(version=version, week=wk1, year=FirstEntry.Year())
         self.LoadList(version=version, week=wk2, year=LastEntry.Year())
+      
+        self.RemoveDuplicates()
                 
         FileNameWk1="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, FirstEntry.StrWeek())
         FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
