@@ -9,6 +9,8 @@ class MyTrade:
   __O  = []   # Orders
   __Ha = []   # Orders History ask
   __Hb = []   # Orders History bid
+  __HaCanceled = 0
+  __HbCanceled = 0
 
   __tmp_ts  = 0
   __tmp_age = 0
@@ -26,9 +28,21 @@ class MyTrade:
   def LenOrderBookBid(self):
     return len(self.__Hb)
 
+  def CanceledAsk(self):
+    return self.__HaCanceled
+
+  def CanceledBid(self):
+    return self.__HbCanceled
+
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
-    return self.__tmp_ts-o['ts'] <= self.__tmp_age
+    bOutdated = self.__tmp_ts-o['ts'] <= self.__tmp_age
+    if bOutdated:
+      if o['type'] == 'ask':
+        self.__HaCanceled +=1
+      else:
+        self.__HbCanceled +=1
+    return bOutdated
 
   def __CheckAndFillOrdersT(self, o):
     return o['couple'] == "dsh_btc"

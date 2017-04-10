@@ -336,7 +336,7 @@ class MyRich:
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
     print("  Bankrupt sell: %d buy: %d" % (bankrupt_counter_sell, bankrupt_counter_buy))
-    print("  asked %d,  bid %d" % (cnt_ask, cnt_bid))
+    print("  asked %d (canceled %d),  bid %d (canceled %d)" % (cnt_ask, T.CanceledAsk(), cnt_bid, T.CanceledBid()))
     T.PrintStartBalance()
     T.PrintBalance()
 
