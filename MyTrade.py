@@ -52,7 +52,7 @@ class MyTrade:
   def FillOrders(self, price, age=0, ts=0):
     Debug=True
     if Debug:
-      print("FillOrders")
+      print("FillOrders with price %f" % price)
 
     if Debug:
       print("Orders before remove outdated:")
@@ -64,7 +64,7 @@ class MyTrade:
     self.__tmp_price = price
 
     if age > 0 and ts > 0:
-      OrdersRemovedOutdated=filter(self.__CheckOutdated, self.__O)
+      OrdersRemovedOutdated=list(filter(self.__CheckOutdated, self.__O))
     else:
       OrdersRemovedOutdated=self.__O
 
@@ -74,7 +74,7 @@ class MyTrade:
       for o in OrdersRemovedOutdated:
         print("  "+str(o))
     
-    O=filter(self.__CheckAndFillOrders, self.__O)
+    O=filter(self.__CheckAndFillOrders, OrdersRemovedOutdated)
 
     if Debug:
       print("OrdersNotFilled:")
