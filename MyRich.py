@@ -530,6 +530,25 @@ class MyRich:
       f.close()
 
 
+  #  V01:  [1490601525, "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
+  def __uniquify(self, L):
+    seen = set()
+    for item in L:
+      if item[2]['tid'] not in seen:
+        seen.add(item[2]['tid'])
+        yield item 
+  
+  def RemoveDuplicates(self):
+    print("RemoveDuplicates: orig len %d " % len(self.__L), end='')
+    self.__L=list(self.__uniquify(self.__L))
+    print("new len %d " % len(self.__L))
+
+  def RemoveDuplicatesMode(self, week=0, year=0):
+    if self.LoadList(week=week, year=year):
+      self.RemoveDuplicates()
+      self.SaveList()
+
+
   def Crawler(self):
     self.LoadList()
 
@@ -578,7 +597,16 @@ class MyRich:
       for v in L:
         print("  "+str(v))
 
-      
+    self.CleanHist()
+    self.LoadList(version=1, week=14, year=2012)
+    self.RemoveDuplicates()
+    print("List after removed duplicates")
+    self.SetDataPath("FuncTests/results")
+    self.SaveList(version=1)
+    for o in self.__L:
+      print("  "+str(o))
+ 
+
 
   def InfoMode(self, week=0, year=0, version=None):
     if version == None:
@@ -675,6 +703,9 @@ class MyRich:
     #C=self.GetListFromCouple("dsh_eur")
     
     #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
+  
+     
+  
     
     self.TestFillTrades()
     return
@@ -741,7 +772,7 @@ def main(argv=None):
 #    version=0
 
     if len(argv) > 1:
-      modes = ["functest", "info", "crawler", "v0to1"]
+      modes = ["functest", "info", "crawler", "v0to1", "remdupl"]
       mode=R.ParseCmdLineArgs(argv, modes)
 
     if mode == "help":
@@ -788,6 +819,8 @@ def main(argv=None):
       R.ConvertData_v0to1(MyRich.week, MyRich.year)
     elif mode == "info":
       R.InfoMode(MyRich.week, MyRich.year, MyRich.version)
+    elif mode == "remdupl":
+      R.RemoveDuplicatesMode(MyRich.week, MyRich.year)
     else:
       R.Test()
     
