@@ -6,11 +6,13 @@ import sys
 class MyTrade:
 
   __F  = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
-  __O  = []   # Orders
+  __O  = []   # Order Book
   __Ha = []   # Orders History ask
   __Hb = []   # Orders History bid
   __HaCanceled = 0
   __HbCanceled = 0
+
+  __TypeOfLastFilled = {'':''}
 
   __tmp_ts  = 0
   __tmp_age = 0
@@ -34,6 +36,23 @@ class MyTrade:
   def CanceledBid(self):
     return self.__HbCanceled
 
+  def HasActiveBid(self):
+    for o in self.__O:
+      if o['type'] == 'bid':
+        return True
+    return False
+ 
+  def HasActiveAsk(self):
+    for o in self.__O:
+      if o['type'] == 'ask':
+        return True
+    return False
+
+  def GetTypeOfLastFilled(self, id=''):
+    if not id in self.__TypeOfLastFilled:
+      return ''
+    return self.__TypeOfLastFilled[id]
+ 
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
     bOutdated = self.__tmp_ts-o['ts'] > self.__tmp_age
@@ -51,12 +70,12 @@ class MyTrade:
     #print("CheckAndFillOrders ts %d price %f o %s" % (ts, price, str(o)))
     if o['type'] == 'ask':
       if o['price'] > price:
-        self.FillOrderAsk(price, o['amount'], o['couple'], ts=ts)
+        self.FillOrderAsk(price, o['amount'], o['couple'], o['id'], ts=ts)
         self.__Ha.append([ts, price, o['id']])
         Ret=False # remove from list
     else:
       if o['price'] < price:
-        self.FillOrderBid(price, o['amount'], o['couple'], ts=ts)
+        self.FillOrderBid(price, o['amount'], o['couple'], o['id'], ts=ts)
         self.__Hb.append([ts, price, o['id']])
         Ret=False # remove from list
     return Ret
@@ -148,7 +167,7 @@ class MyTrade:
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
      
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
-  def FillOrderAsk(self, price, amount, couple, ts=0):
+  def FillOrderAsk(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')
     cur_ask  = cur[0]  # dsh
     cur_sell = cur[1]  # btc
@@ -160,9 +179,11 @@ class MyTrade:
     self.__F[cur_sell] = self.__F[cur_sell]-sell_price #btc
     self.__F[cur_ask]  = self.__F[cur_ask] +amount  #dsh
 
+    self.__TypeOfLastFilled[id] = 'ask'
+
     print("  [%d] Sold %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
 
-  def FillOrderBid(self, price, amount, couple, ts=0):
+  def FillOrderBid(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')
     cur_bid = cur[0] # dsh gets less
     cur_buy = cur[1] # btc gets more
@@ -174,6 +195,8 @@ class MyTrade:
       return 0.0
     self.__F[cur_buy] = self.__F[cur_buy]+buy_price # btc
     self.__F[cur_bid] = self.__F[cur_bid]-amount # dsh
+
+    self.__TypeOfLastFilled[id] = 'bid'
 
     print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
 
@@ -197,7 +220,7 @@ class MyTrade:
     self.PrintBalance()
 
     if self.__StartBalance[cur_buy] > self.__F[cur_buy]:
-      self.FillOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple)
+      self.FillOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple, id='FinalFill')
     else:
       self.FillOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple)
 

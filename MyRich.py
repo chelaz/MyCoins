@@ -312,13 +312,15 @@ class MyRich:
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        T.PlaceOrderBid(v[1], val, couple, ts=ts)
-        cnt_bid+=1
+        if T.GetTypeOfLastFilled('InterBand') != 'bid':
+          T.PlaceOrderBid(v[1], val, couple, id='InterBand', ts=ts)
+          cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        T.PlaceOrderAsk(v[1], val, couple, ts=ts)
-        cnt_ask+=1
+        if T.GetTypeOfLastFilled('InterBand') != 'ask':
+          T.PlaceOrderAsk(v[1], val, couple, id='InterBand', ts=ts)
+          cnt_ask+=1
 
       ts_prev = ts
 
