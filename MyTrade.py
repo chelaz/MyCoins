@@ -22,10 +22,10 @@ class MyTrade:
   def LenOrderBook(self):
     return len(self.__O)
 
-  def LenOrderBookAsk(self):
+  def LenOrderHistAsk(self):
     return len(self.__Ha)
 
-  def LenOrderBookBid(self):
+  def LenOrderHistBid(self):
     return len(self.__Hb)
 
   def CanceledAsk(self):
@@ -36,17 +36,14 @@ class MyTrade:
 
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
-    bOutdated = self.__tmp_ts-o['ts'] <= self.__tmp_age
+    bOutdated = self.__tmp_ts-o['ts'] > self.__tmp_age
     if bOutdated:
       if o['type'] == 'ask':
         self.__HaCanceled +=1
       else:
         self.__HbCanceled +=1
-    return bOutdated
+    return not bOutdated
 
-  def __CheckAndFillOrdersT(self, o):
-    return o['couple'] == "dsh_btc"
- 
   def __CheckAndFillOrders(self, o):
     Ret=True
     ts    = self.__tmp_ts
@@ -55,19 +52,19 @@ class MyTrade:
     if o['type'] == 'ask':
       if o['price'] > price:
         self.FillOrderAsk(price, o['amount'], o['couple'], ts=ts)
-        self.__Ha.append([ts, price])
+        self.__Ha.append([ts, price, o['id']])
         Ret=False # remove from list
     else:
       if o['price'] < price:
         self.FillOrderBid(price, o['amount'], o['couple'], ts=ts)
-        self.__Hb.append([ts, price])
+        self.__Hb.append([ts, price, o['id']])
         Ret=False # remove from list
     return Ret
 
   # {'type':'ask', 'price':price, 'amount':amount, 'couple':couple}
   # ts is current timestamp, age is cur ts minus place order ts
   def FillOrders(self, price, age=0, ts=0):
-    Debug=True
+    Debug=False
     if Debug:
       print("FillOrders with price %f" % price)
 
@@ -85,10 +82,9 @@ class MyTrade:
     else:
       OrdersRemovedOutdated=self.__O
 
-
     if Debug:
-      print("OrdersRemovedOutdated:")
-      for o in OrdersRemovedOutdated:
+     print("OrdersRemovedOutdated: %d" % (len(self.__O)-len(OrdersRemovedOutdated)))
+     for o in OrdersRemovedOutdated:
         print("  "+str(o))
     
     self.__O=list(filter(self.__CheckAndFillOrders, OrdersRemovedOutdated))
@@ -145,11 +141,11 @@ class MyTrade:
   def GetPlotHistBid(self):
     return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
  
-  def PlaceOrderAsk(self, price, amount, couple, ts=0):
-    self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts})
+  def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
+    self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
 
-  def PlaceOrderBid(self, price, amount, couple, ts=0):
-    self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts})
+  def PlaceOrderBid(self, price, amount, couple, ts=0, id=''):
+    self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
      
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
   def FillOrderAsk(self, price, amount, couple, ts=0):

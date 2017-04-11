@@ -299,7 +299,7 @@ class MyRich:
         ts_prev = ts
         continue
 
-      print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderBookAsk(), T.LenOrderBookBid(), T.LenOrderBook()))
+      print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
       T.FillOrders(v[1], ts=ts, age=WinSize)
 
@@ -327,7 +327,10 @@ class MyRich:
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
     print("  Bankrupt sell: %d buy: %d" % (bankrupt_counter_sell, bankrupt_counter_buy))
-    print("  asked %d (canceled %d),  bid %d (canceled %d)" % (cnt_ask, T.CanceledAsk(), cnt_bid, T.CanceledBid()))
+    print("  asked %d (%d) (canceled %d),  bid %d (%d) (canceled %d)" % \
+          (cnt_ask, T.LenOrderHistAsk()+T.CanceledAsk(), T.CanceledAsk(), \
+           cnt_bid, T.LenOrderHistBid()+T.CanceledBid(), T.CanceledBid()))
+
     T.PrintStartBalance()
     T.PrintBalance()
 
