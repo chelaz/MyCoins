@@ -36,12 +36,14 @@ class MyTrade:
   def CanceledBid(self):
     return self.__HbCanceled
 
+  # unused
   def HasActiveBid(self):
     for o in self.__O:
       if o['type'] == 'bid':
         return True
     return False
  
+  # unused
   def HasActiveAsk(self):
     for o in self.__O:
       if o['type'] == 'ask':

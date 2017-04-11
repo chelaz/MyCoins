@@ -275,14 +275,14 @@ class MyRich:
 
     val=0.01
 
-    Debug=True
+    Debug=False
 
     if Debug:
       T.PrintBalance()
 
     L=self.GetPriceList(couple)
 
-    WinSize=50
+    WinSize=100
 
     bankrupt_counter_sell=0
     bankrupt_counter_buy=0
@@ -299,7 +299,8 @@ class MyRich:
         ts_prev = ts
         continue
 
-      print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
+      if Debug:
+        print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
       T.FillOrders(v[1], ts=ts, age=WinSize)
 
