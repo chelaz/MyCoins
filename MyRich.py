@@ -302,7 +302,6 @@ class MyRich:
       print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderBookAsk(), T.LenOrderBookBid(), T.LenOrderBook()))
 
       T.FillOrders(v[1], ts=ts, age=WinSize)
-#      T.FillOrders(v[1], ts=ts)
 
       LastL = L[i-WinSize-1:i]
 
@@ -313,25 +312,17 @@ class MyRich:
 
       if v[1] < MMList[0][1]['min']:
         print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
-        if T.PlaceOrderBid(v[1], val, couple, ts=ts) == 0.0:
-          bankrupt_counter_sell += 1
-        else:
-          cnt_bid+=1
+        T.PlaceOrderBid(v[1], val, couple, ts=ts)
+        cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
         print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
-        if T.PlaceOrderAsk(v[1], val, couple, ts=ts) == 0.0:
-          bankrupt_counter_buy += 1
-        else:
-          cnt_ask+=1
-
-      #if Debug:
-      #  print("MMList for %d" % i)
-      #  for v in MMList:
-      #    print("  "+str(v))
+        T.PlaceOrderAsk(v[1], val, couple, ts=ts)
+        cnt_ask+=1
 
       ts_prev = ts
 
+    # end for __L
     T.SellToEqualizeStartBalance(L[-1][1], couple)
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
