@@ -9,7 +9,7 @@ class MyTrade:
   __O  = []   # Order Book
   __Ha = []   # Orders History ask
   __Hb = []   # Orders History bid
-  __HF = []   # [[ ts, f ] ,...] # f is copy of __F
+  __HF = []   # [[ ts, price, f ] ,...] # f is copy of __F
 
   __HaCanceled = 0
   __HbCanceled = 0
@@ -25,6 +25,9 @@ class MyTrade:
   def __init__(self, StartBalance = { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 } ):
     self.__StartBalance = dict(StartBalance) # explicit copy of fund
     self.__F = StartBalance
+
+  def GetF(self):
+    return self.__F
 
   def LenOrderBook(self):
     return len(self.__O)
@@ -85,13 +88,15 @@ class MyTrade:
       if o['price'] > price:
         self.FillOrderAsk(price, o['amount'], o['couple'], o['id'], ts=ts)
         self.__Ha.append([ts, price, o['id']])
-        self.__HF.append([ts, dict(self.__F)]) # make copy of balance
+        self.__HF.append([ts, price, o['couple'], dict(self.__F)]) # make copy of balance
 
         Ret=False # remove from list
     else:
       if o['price'] < price:
         self.FillOrderBid(price, o['amount'], o['couple'], o['id'], ts=ts)
         self.__Hb.append([ts, price, o['id']])
+        self.__HF.append([ts, price, o['couple'], dict(self.__F)]) # make copy of balance
+
         Ret=False # remove from list
     return Ret
 
@@ -186,10 +191,24 @@ class MyTrade:
   def GetPlotHistBid(self):
     return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
 
+  # eg: amount=0.24, price=0.08, base=1.0, currency=dsh
+  def RecalcToCurrency(self, uprice, F, couple):
+    cur=couple.split('_')
+    cur_buy  = cur[0]
+    cur_sell = cur[1]
+
+    price = uprice*(self.__StartBalance[cur_buy]-F[cur_buy])
+    #print("Equalized: with uprice %f %s to %f %s" % (uprice, cur_buy+"/"+cur_sell, F[cur_sell]-price, cur_sell))
+
+    return F[cur_sell]-price
+
   def GetPlotHistBalance(self, currency):
-    Factor=5.0
-    Add=-4.15-0.8
-    return (list(map(lambda v:v[0], self.__HF)), list(map(lambda v:v[1][currency]*Factor+Add, self.__HF)))
+    Factor=18.0
+    Add=-17.15-0.8
+    return (list(map(lambda v:v[0], self.__HF)), list(map(\
+            lambda v:self.RecalcToCurrency(v[1], v[3], v[2])*Factor+Add, \
+           # lambda v:v[2][currency]*Factor+Add,\
+            self.__HF)))
  
   def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
@@ -255,7 +274,7 @@ class MyTrade:
     if self.__StartBalance[cur_buy] > self.__F[cur_buy]:
       self.FillOrderAsk(price, self.__StartBalance[cur_buy]-self.__F[cur_buy], couple, id='FinalFill')
     else:
-      self.FillOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple)
+      self.FillOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple, id='FinalFill')
 
 
     self.PrintBalance()

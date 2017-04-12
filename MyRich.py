@@ -568,6 +568,7 @@ class MyRich:
     
     #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+#    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
   
     self.SimulateTrading(T, couple)
   
@@ -695,7 +696,7 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    #self.LoadList(week=14)
+    self.LoadList(week=12)
 
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
@@ -709,30 +710,41 @@ class MyRich:
      
   
     
-    self.TestFillTrades()
-    return
+    #self.TestFillTrades()
+    #return
     
   #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
   
     T.PrintBalance()
 
-    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
-    T.PlaceOrderAsk( 0.06,    0.24, "dsh_btc", ts=11)
-    T.PlaceOrderAsk( 0.09,    0.24, "dsh_btc", ts=12)
-    T.PlaceOrderAsk( 0.07,    0.24, "dsh_btc", ts=13)
-    T.PlaceOrderAsk( 0.04,    0.24, "dsh_btc", ts=14)
-    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc", ts=15)
-
-    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
+#    T.PlaceOrderAsk( 0.08,    0.24, "dsh_btc", ts=10)
+#    T.PlaceOrderAsk( 0.06,    0.24, "dsh_btc", ts=11)
+#    T.PlaceOrderAsk( 0.09,    0.24, "dsh_btc", ts=12)
+#    T.PlaceOrderAsk( 0.07,    0.24, "dsh_btc", ts=13)
+#    T.PlaceOrderAsk( 0.04,    0.24, "dsh_btc", ts=14)
+#    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc", ts=15)
+#
+#    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
  
     #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
  
-    T.FillOrders(0.07, ts=15, age=1)
+    T.FillOrders(0.07, ts=15, age=10)
+
+    T.PlaceOrderBid( 0.05, 0.01, "dsh_btc", ts=12)
+ 
+    T.FillOrders(0.1, ts=15, age=10)
+
 
     T.PrintHistAsk()
     T.PrintHistBid()
   
+    T.PrintBalance()
+
+    price=self.__L[-1][2]['price']
+    print("RecalcToBtc: %f" % T.RecalcToCurrency(price, T.GetF(), "dsh_btc"))
+
+    T.SellToEqualizeStartBalance(price, "dsh_btc")
     T.PrintBalance()
 
 
