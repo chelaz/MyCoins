@@ -283,6 +283,8 @@ class MyRich:
     L=self.GetPriceList(couple)
 
     WinSize=100
+    PlaceBidFact=0.99
+    PlaceAskFact=1.01
 
     bankrupt_counter_sell=0
     bankrupt_counter_buy=0
@@ -312,15 +314,15 @@ class MyRich:
         continue
 
       if v[1] < MMList[0][1]['min']:
-        print("----------------------------------->Curval below min: %f < %f min" % (v[1], MMList[0][1]['min']))
+        print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
         if T.GetTypeOfLastFilled('InterBand') != 'bid':
-          T.PlaceOrderBid(v[1], val, couple, id='InterBand', ts=ts)
+          T.PlaceOrderBid(PlaceBidFact*v[1], val, couple, id='InterBand', ts=ts)
           cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
-        print("----------------------------------->Curval above max: %f > %f min" % (v[1], MMList[0][1]['max']))
+        print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
         if T.GetTypeOfLastFilled('InterBand') != 'ask':
-          T.PlaceOrderAsk(v[1], val, couple, id='InterBand', ts=ts)
+          T.PlaceOrderAsk(PlaceAskFact*v[1], val, couple, id='InterBand', ts=ts)
           cnt_ask+=1
 
       ts_prev = ts
@@ -329,7 +331,7 @@ class MyRich:
     T.SellToEqualizeStartBalance(L[-1][1], couple)
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
-    print("  Bankrupt sell: %d buy: %d" % (bankrupt_counter_sell, bankrupt_counter_buy))
+    print("  Bankrupt ask: %d bid: %d" % (T.NumBankruptAsk(), T.NumBankruptBid()))
     print("  asked %d (%d) (canceled %d),  bid %d (%d) (canceled %d)" % \
           (cnt_ask, T.LenOrderHistAsk()+T.CanceledAsk(), T.CanceledAsk(), \
            cnt_bid, T.LenOrderHistBid()+T.CanceledBid(), T.CanceledBid()))

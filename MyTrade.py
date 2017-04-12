@@ -12,7 +12,10 @@ class MyTrade:
   __HaCanceled = 0
   __HbCanceled = 0
 
-  __TypeOfLastFilled = {'':''}
+  __HaBankrupt = 0
+  __HbBankrupt = 0
+
+  __TypeOfLastFilled = {'': [ '', 0 ] } # eg: [ 'bid', ts ]
 
   __tmp_ts  = 0
   __tmp_age = 0
@@ -29,6 +32,12 @@ class MyTrade:
 
   def LenOrderHistBid(self):
     return len(self.__Hb)
+
+  def NumBankruptAsk(self):
+    return self.__HaBankrupt
+
+  def NumBankruptBid(self):
+    return self.__HbBankrupt
 
   def CanceledAsk(self):
     return self.__HaCanceled
@@ -53,7 +62,7 @@ class MyTrade:
   def GetTypeOfLastFilled(self, id=''):
     if not id in self.__TypeOfLastFilled:
       return ''
-    return self.__TypeOfLastFilled[id]
+    return self.__TypeOfLastFilled[id][0]
  
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
@@ -93,7 +102,18 @@ class MyTrade:
       print("Orders before remove outdated:")
       for o in self.__O:
         print("  "+str(o))
- 
+
+    AlternatingAge=10000
+
+    #print("last filled: "+str(self.__TypeOfLastFilled))
+    for id in self.__TypeOfLastFilled:
+      v = self.__TypeOfLastFilled[id]
+      #print("id: "+str(v))
+      if ts-v[1] > AlternatingAge:
+        v[0] = ''
+        v[1] = 0
+    #print("last filled after deletion: "+str(self.__TypeOfLastFilled))
+         
     self.__tmp_ts    = ts
     self.__tmp_age   = age
     self.__tmp_price = price
@@ -177,11 +197,12 @@ class MyTrade:
     sell_price = price*amount # in btc
      
     if self.__F[cur_sell] < sell_price: # btc
+      self.__HaBankrupt +=1
       return 0.0
     self.__F[cur_sell] = self.__F[cur_sell]-sell_price #btc
     self.__F[cur_ask]  = self.__F[cur_ask] +amount  #dsh
 
-    self.__TypeOfLastFilled[id] = 'ask'
+    self.__TypeOfLastFilled[id] = [ 'ask', ts ]
 
     print("  [%d] Sold %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
 
@@ -194,11 +215,12 @@ class MyTrade:
      
     if self.__F[cur_bid] < amount: # btc
       #print("Avail amount %f %s is too less to sell %f" % (self.__F[cur_bid], cur_bid, amount))
+      self.__HbBankrupt +=1
       return 0.0
     self.__F[cur_buy] = self.__F[cur_buy]+buy_price # btc
     self.__F[cur_bid] = self.__F[cur_bid]-amount # dsh
 
-    self.__TypeOfLastFilled[id] = 'bid'
+    self.__TypeOfLastFilled[id] = [ 'bid', ts ]
 
     print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
 
