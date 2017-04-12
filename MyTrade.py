@@ -9,6 +9,8 @@ class MyTrade:
   __O  = []   # Order Book
   __Ha = []   # Orders History ask
   __Hb = []   # Orders History bid
+  __HF = []   # [[ ts, f ] ,...] # f is copy of __F
+
   __HaCanceled = 0
   __HbCanceled = 0
 
@@ -83,6 +85,8 @@ class MyTrade:
       if o['price'] > price:
         self.FillOrderAsk(price, o['amount'], o['couple'], o['id'], ts=ts)
         self.__Ha.append([ts, price, o['id']])
+        self.__HF.append([ts, dict(self.__F)]) # make copy of balance
+
         Ret=False # remove from list
     else:
       if o['price'] < price:
@@ -181,6 +185,11 @@ class MyTrade:
  
   def GetPlotHistBid(self):
     return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
+
+  def GetPlotHistBalance(self, currency):
+    Factor=5.0
+    Add=-4.15-0.8
+    return (list(map(lambda v:v[0], self.__HF)), list(map(lambda v:v[1][currency]*Factor+Add, self.__HF)))
  
   def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})

@@ -111,7 +111,7 @@ DoPlot(R, couple, 'b-', Percentage=False)
 #ConfigPlot(couple)
 
 if mode == "simulate":
-  linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go')
+  linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go', *AskBidPlots[2], 'b-')
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
 ConfigPlot(couple)

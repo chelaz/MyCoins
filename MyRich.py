@@ -573,7 +573,8 @@ class MyRich:
   
     PLa=T.GetPlotHistAsk()
     Plb=T.GetPlotHistBid()
-    return (PLa, Plb)
+    Plf=T.GetPlotHistBalance("btc")
+    return (PLa, Plb, Plf)
 
   def ConvertData_v0to1(self, week=0, year=0):
     if self.LoadList(version=0, week=week, year=year):
