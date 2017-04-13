@@ -100,7 +100,7 @@ class MyRich:
 
   def Info(self):
     I=self.__A.getInfo()
-    print("Info:\n  Balance:")
+    print("Info:\n  Balance from Server:")
     #print(I)
     self.__F=I['return']['funds']
      
@@ -111,7 +111,7 @@ class MyRich:
     print("  Server Time: "+SrvTm.Str())
     print("-----------------------------------------")
 
-  def GetBalance(self, currency):
+  def GetServerBalance(self, currency):
     if currency in self.__F:
       return float(self.__F[currency])
     else:
@@ -157,13 +157,6 @@ class MyRich:
     return [ts, couple, v]
 #    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
 
-
-  # obsolete
-  def GetListFromCouple(self, couple):
-    #D=MyTime()
-    L=filter(lambda v : v[2] == couple, self.__L)
-    #D.PrintDiff()
-    return L
 
   # (ts, price, amount)
   def GetPriceList(self, couple):
@@ -346,10 +339,6 @@ class MyRich:
       return map(lambda v : (v[1], v[3]["price"]), List)
     else:
       return map(lambda v : (v[0], v[3]["price"]), List)
-
-  # obsolete
-  def __GetPlotListFromCouple(self, couple, UseTime=False):
-    return list(self.__GetPlotList(self.GetListFromCouple(couple),UseTime))
 
   # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
   def GetPlot(self, couple, NumCoins=1.0, Percentage=False):
@@ -683,6 +672,30 @@ class MyRich:
   
     T.PrintBalance()
 
+  def TestRecalcToCurrency(self):
+ 
+    self.LoadList(week=12)
+
+ #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
+    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+  
+    T.PrintBalance()
+
+    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
+    T.FillOrders(0.07, ts=15, age=10)
+
+    T.PlaceOrderBid( 0.05, 0.01, "dsh_btc", ts=12)
+    T.FillOrders(0.1, ts=15, age=10)
+
+    T.PrintBalance()
+
+    price=self.__L[-1][2]['price']
+    print("RecalcToBtc: %f" % T.RecalcToCurrency(price, T.GetF(), "dsh_btc"))
+
+    T.SellToEqualizeStartBalance(price, "dsh_btc")
+    T.PrintBalance()
+
+
   def Test(self):
 
     #BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
@@ -701,8 +714,6 @@ class MyRich:
 
     #self.PrintPublicTrades()
 
-    #C=self.GetListFromCouple("dsh_eur")
-    
     #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
   
      

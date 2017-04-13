@@ -37,22 +37,24 @@ def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
   lines = None
 
   if ConsiderBalance:
-    lines = plt.plot(*R.GetPlot(couple, R.GetBalance(currency)), fmt)
+    lines = plt.plot(*R.GetPlot(couple, R.GetServerBalance(currency)), fmt)
   else:
     lines = plt.plot(*R.GetPlot(couple, 1.0, Percentage), fmt) 
 
   plt.setp(lines, linewidth=0.5)
 
-def ConfigPlot(couple):
-  ax=plt.gca()
+def ConfigPlot(couple, ax=None):
+  if ax == None:
+    ax=plt.gca()
 
   ax.xaxis.set_major_formatter(mticker.FuncFormatter(timestampToDayMonth))
   ax.xaxis.set_minor_locator(mticker.AutoLocator())
   ax.xaxis.set_minor_formatter(mticker.FuncFormatter(timestampToHrsMin))
 
-  plt.grid(True)
-  plt.ylabel(couple)
-
+  ax.grid(True)
+  #plt.ylabel(couple)
+  ax.set_ylabel(couple)
+  return ax
  
 
 R = MyRich(Keys)
@@ -103,7 +105,7 @@ if mode == "simulate":
 #DoPlot(R, couple_ee, 'g-', ConsiderBalance=False, Percentage=True)
 #ConfigPlot(couple_eb)
 
-#plt.subplot(3,1,3)
+#plt.subplot(2,1,1)
 MMPlot=R.GetMMPlot(couple, 1*60, Percentage=False)
 lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
 plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
@@ -111,10 +113,16 @@ DoPlot(R, couple, 'b-', Percentage=False)
 #ConfigPlot(couple)
 
 if mode == "simulate":
-  linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go', *AskBidPlots[2], 'b-')
+  #linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go', *AskBidPlots[2], 'b-')
+  linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go')
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+ax=ConfigPlot(couple)
 
-ConfigPlot(couple)
+if mode == "simulate":
+  ax2 = ax.twinx()
+  #plt.subplot(2,1,2)
+  linesS=ax2.plot(*AskBidPlots[2], 'b-')
+  ConfigPlot(couple, ax2)
 
 
 

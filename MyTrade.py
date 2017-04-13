@@ -205,8 +205,8 @@ class MyTrade:
     return F[cur_sell]-price
 
   def GetPlotHistBalance(self, currency):
-    Factor=18.0
-    Add=-16.15-1.835
+    Factor=1.0 # 18.0
+    Add=0.0 #-16.15-1.835
     return (list(map(lambda v:v[0], self.__HF)), list(map(\
             lambda v:self.RecalcToCurrency(v[1], v[3], v[2])*Factor+Add, \
            # lambda v:v[2][currency]*Factor+Add,\
