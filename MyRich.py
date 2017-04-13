@@ -25,7 +25,7 @@ import sys
 from btceapi import api
 from Keys import Keys
 from MyTrade import MyTrade
-
+from MySimu import SimuConf
 class MyTime:
   __datetime = None
 
@@ -204,6 +204,7 @@ class MyRich:
     return MMList
      
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  # obsolete
   def BuildMinMaxList(self, couple, bucket_seconds):
 
     Debug=False
@@ -260,11 +261,36 @@ class MyRich:
     
     return MMList       
 
+### Simu Algos
+
+  # vc:    current price
+  # LastL: last traded values list
+  # C:     SimuConf
+  def SimuInterBand(self, v, LastL, C):
+    T = C.T
+    val = 0.01
+    ts = v[0]
+
+    print("SimuInterBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
+
+    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
+
+    if v[1] < MMList[0][1]['min']:
+      #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
+      if T.GetTypeOfLastFilled('InterBand') != 'bid':
+        T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts)
+
+    if v[1] > MMList[0][1]['max']:
+      #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
+      if T.GetTypeOfLastFilled('InterBand') != 'ask':
+        T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
+
 
 ### Simulate Trading functions
 
-  # T is of type MyTrade
-  def SimulateTrading(self, T, couple):
+  # T: MyTrade
+  # C: SimuConf
+  def SimulateTrading(self, T, C):
 
     val=0.01
 
@@ -273,9 +299,9 @@ class MyRich:
     if Debug:
       T.PrintBalance()
 
-    L=self.GetPriceList(couple)
+    L=self.GetPriceList(C.couple)
 
-    WinSize=100
+    C.WinSize=100
     PlaceBidFact=0.99
     PlaceAskFact=1.01
 
@@ -288,38 +314,40 @@ class MyRich:
       #v is last traded value
       ts = v[0]
 
-      if i <= WinSize:
+      if i <= C.WinSize:
         ts_prev = ts
         continue
 
       if Debug:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
-      T.FillOrders(v[1], ts=ts, age=WinSize)
+      T.FillOrders(v[1], ts=ts, age=C.WinSize)
 
-      LastL = L[i-WinSize-1:i]
+      LastL = L[i-C.WinSize-1:i]
 
-      MMList = self.BuildMinMaxList2(LastL, WinSize)
+      C.Apply(v, LastL)
+
+#      MMList = self.BuildMinMaxList2(LastL, C.WinSize)
 
 #      if ts == ts_prev:
 #        continue
 
-      if v[1] < MMList[0][1]['min']:
-        #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
-        if T.GetTypeOfLastFilled('InterBand') != 'bid':
-          T.PlaceOrderBid(PlaceBidFact*v[1], val, couple, id='InterBand', ts=ts)
-          cnt_bid+=1
-
-      if v[1] > MMList[0][1]['max']:
-        #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
-        if T.GetTypeOfLastFilled('InterBand') != 'ask':
-          T.PlaceOrderAsk(PlaceAskFact*v[1], val, couple, id='InterBand', ts=ts)
-          cnt_ask+=1
+#      if v[1] < MMList[0][1]['min']:
+#        #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
+#        if T.GetTypeOfLastFilled('InterBand') != 'bid':
+#          T.PlaceOrderBid(PlaceBidFact*v[1], val, couple, id='InterBand', ts=ts)
+#          cnt_bid+=1
+#
+#      if v[1] > MMList[0][1]['max']:
+#        #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
+#        if T.GetTypeOfLastFilled('InterBand') != 'ask':
+#          T.PlaceOrderAsk(PlaceAskFact*v[1], val, couple, id='InterBand', ts=ts)
+#          cnt_ask+=1
 
       ts_prev = ts
 
     # end for __L
-    T.SellToEqualizeStartBalance(L[-1][1], couple)
+    T.SellToEqualizeStartBalance(L[-1][1], C.couple)
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
     print("  Bankrupt ask: %d bid: %d" % (T.NumBankruptAsk(), T.NumBankruptBid()))
@@ -556,8 +584,9 @@ class MyRich:
     #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
-  
-    self.SimulateTrading(T, couple)
+ 
+    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=100) 
+    self.SimulateTrading(T, C)
   
     PLa=T.GetPlotHistAsk()
     Plb=T.GetPlotHistBid()
