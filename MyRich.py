@@ -271,7 +271,7 @@ class MyRich:
     val = 0.01
     ts = v[0]
 
-    print("SimuInterBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
+    #print("SimuInterBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
 
     MMList = self.BuildMinMaxList2(LastL, C.WinSize)
 
@@ -284,6 +284,32 @@ class MyRich:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
       if T.GetTypeOfLastFilled('InterBand') != 'ask':
         T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
+
+  # vc:    current price
+  # LastL: last traded values list
+  # C:     SimuConf
+  def SimuIntraBand(self, v, LastL, C):
+    T = C.T
+    val = 0.01
+    ts = v[0]
+    p  = v[1]
+
+    #print("SimuIntraBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
+
+    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
+
+    min = MMList[0][1]['min']
+    max = MMList[0][1]['max']
+    
+    if (max-min)*0.9+min < p and p < max:
+      print("----------------------------------->Curval top: %f < %f=max" % (p, max))
+      if T.GetTypeOfLastFilled('IntraBand') != 'bid':
+        T.PlaceOrderBid(p, val, C.couple, id='IntraBand', ts=ts)
+
+    if (max-min)*0.1+min > p and p > min:
+      print("----------------------------------->Curval bottom: %f > %f=min" % (p, min))
+      if T.GetTypeOfLastFilled('IntraBand') != 'ask':
+        T.PlaceOrderAsk(p, val, C.couple, id='IntraBand', ts=ts)
 
 
 ### Simulate Trading functions
@@ -301,12 +327,12 @@ class MyRich:
 
     L=self.GetPriceList(C.couple)
 
-    C.WinSize=100
-    PlaceBidFact=0.99
-    PlaceAskFact=1.01
+    #C.WinSize=100
+    #PlaceBidFact=0.99
+    #PlaceAskFact=1.01
 
-    cnt_bid=0
-    cnt_ask=0
+    #cnt_bid=0
+    #cnt_ask=0
 
     ts_prev=0
     for i in range(len(L)):
@@ -351,9 +377,9 @@ class MyRich:
     #T.SellAll(L[-1][1], couple)
     print("\n-------------------------------------\nSimulation Summary:");
     print("  Bankrupt ask: %d bid: %d" % (T.NumBankruptAsk(), T.NumBankruptBid()))
-    print("  asked %d (%d) (canceled %d),  bid %d (%d) (canceled %d)" % \
-          (cnt_ask, T.LenOrderHistAsk()+T.CanceledAsk(), T.CanceledAsk(), \
-           cnt_bid, T.LenOrderHistBid()+T.CanceledBid(), T.CanceledBid()))
+    print("  asked %d (canceled %d),  bid %d (canceled %d)" % \
+          (T.LenOrderHistAsk()+T.CanceledAsk(), T.CanceledAsk(), \
+           T.LenOrderHistBid()+T.CanceledBid(), T.CanceledBid()))
 
     T.PrintStartBalance()
     T.PrintBalance()
@@ -585,13 +611,38 @@ class MyRich:
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
-    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=100) 
+ #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
+    C=SimuConf(T, Algo=self.SimuIntraBand, couple=couple, WinSize=50) 
     self.SimulateTrading(T, C)
   
     PLa=T.GetPlotHistAsk()
     Plb=T.GetPlotHistBid()
     Plf=T.GetPlotHistBalance("btc")
     return (PLa, Plb, Plf)
+
+  def SimulateTradingMode(self, week=0, year=0):
+    if not self.LoadList(week=week, year=year):
+      return
+
+    Best_Bal=0.0
+    Best_WS=0
+
+#    for w in [10, 100]:
+    for w in range(250, 1000, 50):
+
+      T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+
+      C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w) 
+      self.SimulateTrading(T, C)
+
+      if Best_Bal < T.GetF()['btc']:
+        Best_Bal = T.GetF()['btc']
+        Best_WS  = w
+      print("---------------> WinSize: %5d and Balance: %f\n\n" % (w, T.GetF()['btc']))
+  
+    print("Best_Bal: %f with WinSize: %d" % (Best_Bal, Best_WS)) 
+    
+
 
   def ConvertData_v0to1(self, week=0, year=0):
     if self.LoadList(version=0, week=week, year=year):
@@ -824,7 +875,7 @@ def main(argv=None):
 #    version=0
 
     if len(argv) > 1:
-      modes = ["functest", "info", "crawler", "v0to1", "remdupl"]
+      modes = ["functest", "info", "crawler", "v0to1", "remdupl", "simulate" ]
       mode=R.ParseCmdLineArgs(argv, modes)
 
     if mode == "help":
@@ -873,6 +924,8 @@ def main(argv=None):
       R.InfoMode(MyRich.week, MyRich.year, MyRich.version)
     elif mode == "remdupl":
       R.RemoveDuplicatesMode(MyRich.week, MyRich.year)
+    elif mode == "simulate":
+      R.SimulateTradingMode(MyRich.week, MyRich.year)
     else:
       R.Test()
     
