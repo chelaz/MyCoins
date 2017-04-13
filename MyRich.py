@@ -286,8 +286,6 @@ class MyRich:
     PlaceBidFact=0.99
     PlaceAskFact=1.01
 
-    bankrupt_counter_sell=0
-    bankrupt_counter_buy=0
     cnt_bid=0
     cnt_ask=0
 
@@ -310,17 +308,17 @@ class MyRich:
 
       MMList = self.BuildMinMaxList2(LastL, WinSize)
 
-      if ts == ts_prev:
-        continue
+#      if ts == ts_prev:
+#        continue
 
       if v[1] < MMList[0][1]['min']:
-        print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
+        #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
         if T.GetTypeOfLastFilled('InterBand') != 'bid':
           T.PlaceOrderBid(PlaceBidFact*v[1], val, couple, id='InterBand', ts=ts)
           cnt_bid+=1
 
       if v[1] > MMList[0][1]['max']:
-        print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
+        #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
         if T.GetTypeOfLastFilled('InterBand') != 'ask':
           T.PlaceOrderAsk(PlaceAskFact*v[1], val, couple, id='InterBand', ts=ts)
           cnt_ask+=1

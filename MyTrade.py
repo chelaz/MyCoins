@@ -112,7 +112,9 @@ class MyTrade:
       for o in self.__O:
         print("  "+str(o))
 
-    AlternatingAge=10000
+#    AlternatingAge=10000
+    AlternatingAge=1000000
+
 
     #print("last filled: "+str(self.__TypeOfLastFilled))
     for id in self.__TypeOfLastFilled:
@@ -204,7 +206,7 @@ class MyTrade:
 
   def GetPlotHistBalance(self, currency):
     Factor=18.0
-    Add=-17.15-0.8
+    Add=-16.15-1.835
     return (list(map(lambda v:v[0], self.__HF)), list(map(\
             lambda v:self.RecalcToCurrency(v[1], v[3], v[2])*Factor+Add, \
            # lambda v:v[2][currency]*Factor+Add,\
@@ -232,7 +234,7 @@ class MyTrade:
 
     self.__TypeOfLastFilled[id] = [ 'ask', ts ]
 
-    print("  [%d] Sold %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
+    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
 
   def FillOrderBid(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')
