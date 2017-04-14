@@ -277,12 +277,12 @@ class MyRich:
 
     if v[1] < MMList[0][1]['min']:
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
-      if T.GetTypeOfLastFilled('InterBand') != 'bid':
+      if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
         T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts)
 
     if v[1] > MMList[0][1]['max']:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
-      if T.GetTypeOfLastFilled('InterBand') != 'ask':
+      if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
         T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
 
   # vc:    current price
@@ -351,12 +351,13 @@ class MyRich:
 
       LastL = L[i-C.WinSize-1:i]
 
+      if C.SkipIfSameTS:
+        if ts == ts_prev:
+          continue
+
       C.Apply(v, LastL)
 
 #      MMList = self.BuildMinMaxList2(LastL, C.WinSize)
-
-#      if ts == ts_prev:
-#        continue
 
 #      if v[1] < MMList[0][1]['min']:
 #        #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
@@ -383,7 +384,7 @@ class MyRich:
 
     T.PrintStartBalance()
     T.PrintBalance()
-
+    C.Print()
 
 ### Plot functions
 
@@ -627,21 +628,26 @@ class MyRich:
     Best_Bal=0.0
     Best_WS=0
 
-#    for w in [10, 100]:
-    for w in range(250, 1000, 50):
+    L_WZ = []
+
+#    for w in [100, 290]:
+    for w in range(100, 400, 10):
 
       T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 
       C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w) 
       self.SimulateTrading(T, C)
-
-      if Best_Bal < T.GetF()['btc']:
-        Best_Bal = T.GetF()['btc']
+      B=T.GetF()['btc']
+      if Best_Bal < B:
+        Best_Bal = B
         Best_WS  = w
-      print("---------------> WinSize: %5d and Balance: %f\n\n" % (w, T.GetF()['btc']))
-  
+      print("---------------> WinSize: %5d and Balance: %f\n\n" % (w, B))
+ 
+      L_WZ.append([w, B]) 
     print("Best_Bal: %f with WinSize: %d" % (Best_Bal, Best_WS)) 
-    
+   
+    for w in L_WZ:
+      print("  %s" % str(w))    
 
 
   def ConvertData_v0to1(self, week=0, year=0):

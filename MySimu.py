@@ -10,6 +10,8 @@ class SimuConf:
   WinSize = 100 
   PlaceBidFact=0.99
   PlaceAskFact=1.01
+  OnlyAlternating = True
+  SkipIfSameTS = True
 
   __Algo = None
 
@@ -19,6 +21,19 @@ class SimuConf:
     self.WinSize = WinSize
     self.T = T
     self.__Algo=Algo
+
+  def Print(self):
+    print("Configuration: \n\t"\
+          "WinSize %d, "\
+          "PlaceBidFact %f, "\
+          "PlaceAskFact %f, "\
+          "OnlyAlternating %s, "\
+          "SkipIfSameTS %s" % (\
+          self.WinSize, \
+          self.PlaceBidFact,
+          self.PlaceAskFact,
+          str(self.OnlyAlternating),
+          str(self.SkipIfSameTS)))
 
   def Apply(self, vc, LastL):
     return self.__Algo(vc, LastL, self)
