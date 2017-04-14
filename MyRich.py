@@ -271,19 +271,29 @@ class MyRich:
     val = 0.01
     ts = v[0]
 
-    #print("SimuInterBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
+    L_LastWZ = LastL[-C.WinSize-1:]
 
-    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
+    #print("Len of LastL: old %d new: %d\n" % (len(LastL[-C.WinSize-1:]), len(LastL)))
+    MMList = self.BuildMinMaxList2(L_LastWZ, C.WinSize)
+#    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
+    min=MMList[0][1]['min']
+    max=MMList[0][1]['max']
 
-    if v[1] < MMList[0][1]['min']:
-      #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
+    #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
+    #                       v[1]-min, min, v[1], max, max-v[1], \
+    #                       C.WinSize))
+
+    if v[1] < min:
+      print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
         T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts)
 
-    if v[1] > MMList[0][1]['max']:
-      #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
+    if v[1] > max:
+      print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
         T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
+
+
 
   # vc:    current price
   # LastL: last traded values list
@@ -349,12 +359,14 @@ class MyRich:
 
       T.FillOrders(v[1], ts=ts, age=C.WinSize)
 
-      LastL = L[i-C.WinSize-1:i]
+      #LastL = L[i-C.WinSize-1:i]
+      LastL = L[:i]
 
       if C.SkipIfSameTS:
         if ts == ts_prev:
           continue
 
+      #print("{%d}" %i, end='')
       C.Apply(v, LastL)
 
 #      MMList = self.BuildMinMaxList2(LastL, C.WinSize)
@@ -410,8 +422,8 @@ class MyRich:
   
   
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  def GetMMPlot(self, couple, BucSec, Percentage=False):
-    L=self.BuildMinMaxList2(self.GetPriceList(couple), BucSec)
+  def GetMMPlot(self, couple, WinSize, Percentage=False):
+    L=self.BuildMinMaxList2(self.GetPriceList(couple), WinSize)
     factor=1.0
 
     if Percentage:
@@ -613,7 +625,7 @@ class MyRich:
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
  #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
-    C=SimuConf(T, Algo=self.SimuIntraBand, couple=couple, WinSize=50) 
+    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=50) 
     self.SimulateTrading(T, C)
   
     PLa=T.GetPlotHistAsk()
