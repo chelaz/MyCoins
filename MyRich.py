@@ -77,6 +77,8 @@ class MyRich:
   __F = []    # Funds
   __V = 1     # File Version
 
+  __DebugTS=0
+
   __DataPath = ""
   __StartDate = MyTime()
 
@@ -89,6 +91,9 @@ class MyRich:
       self.__DataPath=DataPath+"/"
     else:
       self.__DataPath=DataPath
+
+  def SetDebugTS(self, ts):
+    self.__DebugTS = ts
 
   def PrintElapsed(self, Str=""):
     print("_> ", end='')
@@ -279,17 +284,21 @@ class MyRich:
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
 
+    maxmin = max-min
+
     #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
     #                       v[1]-min, min, v[1], max, max-v[1], \
     #                       C.WinSize))
 
-    if v[1] < min:
-      print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
+    eps = maxmin*C.MinMaxEpsPerc
+
+    if v[1] < min-eps:
+      #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
         T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts)
 
-    if v[1] > max:
-      print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
+    if v[1] > max+eps:
+      #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
         T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
 
@@ -350,6 +359,14 @@ class MyRich:
       #v is last traded value
       ts = v[0]
 
+      if ts == self.__DebugTS:
+        Debug = True
+      else:
+        Debug = False
+
+      if Debug:
+        print("<D>  ts=%d" % ts)
+
       if i <= C.WinSize:
         ts_prev = ts
         continue
@@ -357,7 +374,7 @@ class MyRich:
       if Debug:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
-      T.FillOrders(v[1], ts=ts, age=C.WinSize)
+      T.FillOrders(v[1], ts=ts, age=C.WinSize, Debug=Debug)
 
       #LastL = L[i-C.WinSize-1:i]
       LastL = L[:i]
@@ -639,24 +656,29 @@ class MyRich:
 
     Best_Bal=0.0
     Best_WS=0
-
+    Best_P=0
     L_WZ = []
 
 #    for w in [100, 290]:
-    for w in range(100, 400, 10):
+#    for w in range(100, 400, 10):
+    w = 290
+    for pi in range(0, 10, 1):
+      p = pi/100
 
       T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 
-      C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w) 
+      C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w, MinMaxEpsPerc=p) 
+      C.Print()
       self.SimulateTrading(T, C)
       B=T.GetF()['btc']
       if Best_Bal < B:
         Best_Bal = B
         Best_WS  = w
-      print("---------------> WinSize: %5d and Balance: %f\n\n" % (w, B))
+        Best_P  = p
+      print("---------------> WinSize: %5d and Balance: %f, %f\n\n" % (w, B, p))
  
-      L_WZ.append([w, B]) 
-    print("Best_Bal: %f with WinSize: %d" % (Best_Bal, Best_WS)) 
+      L_WZ.append([w, B, p]) 
+    print("Best_Bal: %f with WinSize: %d, p %f" % (Best_Bal, Best_WS, Best_P)) 
    
     for w in L_WZ:
       print("  %s" % str(w))    
@@ -725,6 +747,10 @@ class MyRich:
           s = arg.split("=")
           MyRich.year=int(s[1])
 
+        if "debugts" in arg:
+          s = arg.split("=")
+          self.SetDebugTS(s[1])
+
         if "path" in arg:
           s = arg.split("=")
           self.SetDataPath(s[1])
@@ -735,7 +761,7 @@ class MyRich:
             ModeStr = ModeStr+" ["+m+"]"
            
           print("Usage:")
-          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [week=0]" % (argv[0], ModeStr))
+          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [week=0] [debugts=0]" % (argv[0], ModeStr))
           mode="help"
 
     return mode

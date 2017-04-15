@@ -102,8 +102,7 @@ class MyTrade:
 
   # {'type':'ask', 'price':price, 'amount':amount, 'couple':couple}
   # ts is current timestamp, age is cur ts minus place order ts
-  def FillOrders(self, price, age=0, ts=0):
-    Debug=False
+  def FillOrders(self, price, age=0, ts=0, Debug=False):
     if Debug:
       print("FillOrders with price %f" % price)
 
