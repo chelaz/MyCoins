@@ -70,7 +70,7 @@ if len(sys.argv) > 1:
 
 #R.Info()
 
-if not R.LoadList(week=MyRich.week):
+if not R.LoadWeeks(weeks=MyRich.weeks, year=0):
   exit(0)
 #R.LoadList(week=13)
 #R.LoadList(week=14)

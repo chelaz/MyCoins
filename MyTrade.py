@@ -211,10 +211,20 @@ class MyTrade:
            # lambda v:v[2][currency]*Factor+Add,\
             self.__HF)))
  
-  def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
+  def PlaceOrderAsk(self, price, amount, couple, ts=0, id='', OnlyAlternating=False):
+    if OnlyAlternating:
+      if self.GetTypeOfLastFilled(id) == 'ask':
+        return False
+      if self.HasActiveAsk():
+        return False
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
 
-  def PlaceOrderBid(self, price, amount, couple, ts=0, id=''):
+  def PlaceOrderBid(self, price, amount, couple, ts=0, id='', OnlyAlternating=False):
+    if OnlyAlternating:
+      if self.GetTypeOfLastFilled(id) == 'bid':
+        return False
+      if self.HasActiveBid():
+        return False
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
      
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc

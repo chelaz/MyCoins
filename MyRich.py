@@ -68,6 +68,7 @@ class MyTime:
 class MyRich:
   # cmd line args
   week=0 # 0 is this week
+  weeks=[] # list of weeks given by cmd line args comma separated
   year=0 # 0 is this year 
   version=0
 
@@ -295,12 +296,12 @@ class MyRich:
     if v[1] < min-eps:
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-        T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts)
+        T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating)
 
     if v[1] > max+eps:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-        T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts)
+        T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating)
 
 
 
@@ -336,6 +337,9 @@ class MyRich:
   # T: MyTrade
   # C: SimuConf
   def SimulateTrading(self, T, C):
+
+    if self.__DebugTS > 0:
+      print("Debug ts: %d" % self.__DebugTS)
 
     val=0.01
 
@@ -485,6 +489,17 @@ class MyRich:
       print("  ", end='')
       print(v)
 
+
+  def LoadWeeks(self, weeks, year=0):
+    Loaded=False
+    if len(weeks) == 0:
+      if not self.LoadList(week=0, year=year):
+        return False
+    else:
+      for w in weeks:
+        if self.LoadList(week=w, year=year):
+          Loaded=True
+    return Loaded 
 
   def LoadList(self, version=None, week=0, year=0):
     if version == None:
@@ -641,8 +656,8 @@ class MyRich:
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
- #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
-    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=50) 
+    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
+ #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=50) 
     self.SimulateTrading(T, C)
   
     PLa=T.GetPlotHistAsk()
@@ -650,9 +665,11 @@ class MyRich:
     Plf=T.GetPlotHistBalance("btc")
     return (PLa, Plb, Plf)
 
-  def SimulateTradingMode(self, week=0, year=0):
-    if not self.LoadList(week=week, year=year):
+  def SimulateTradingMode(self, weeks=[], year=0):
+    if not self.LoadWeeks(weeks, year):
       return
+
+    self.RemoveDuplicates()
 
     Best_Bal=0.0
     Best_WS=0
@@ -739,9 +756,18 @@ class MyRich:
           s = arg.split("=")
           MyRich.version=int(s[1])
 
-        if "week" in arg:
+        if "weeks" in arg:
           s = arg.split("=")
-          MyRich.week=int(s[1])
+          if "," in s[1]:
+            wks=s[1].split(',')
+            #for w in wks:
+            #  MyRich.weeks.append(int(w))
+            MyRich.weeks=list(map(lambda w: int(w), wks))
+            #print("cmd line weeks: "+str(MyRich.weeks))
+            MyRich.week=MyRich.weeks[0]
+          else:
+            MyRich.weeks=append(int(s[1]))
+            MyRich.week=int(s[1])
 
         if "year" in arg:
           s = arg.split("=")
@@ -749,7 +775,7 @@ class MyRich:
 
         if "debugts" in arg:
           s = arg.split("=")
-          self.SetDebugTS(s[1])
+          self.SetDebugTS(int(s[1]))
 
         if "path" in arg:
           s = arg.split("=")
@@ -761,7 +787,7 @@ class MyRich:
             ModeStr = ModeStr+" ["+m+"]"
            
           print("Usage:")
-          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [week=0] [debugts=0]" % (argv[0], ModeStr))
+          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [weeks=w1,..,wn] [debugts=0]" % (argv[0], ModeStr))
           mode="help"
 
     return mode
@@ -969,7 +995,7 @@ def main(argv=None):
     elif mode == "remdupl":
       R.RemoveDuplicatesMode(MyRich.week, MyRich.year)
     elif mode == "simulate":
-      R.SimulateTradingMode(MyRich.week, MyRich.year)
+      R.SimulateTradingMode(MyRich.weeks, MyRich.year)
     else:
       R.Test()
     

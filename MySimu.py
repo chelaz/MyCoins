@@ -14,12 +14,12 @@ class SimuConf:
 #  PlaceAskFact=1.01
   OnlyAlternating = True
   SkipIfSameTS = True
-  MinMaxEpsPerc= 0.02
+  MinMaxEpsPerc= 0.05
 
   __Algo = None
 
   # T: MyTrade (Trading interface)
-  def __init__(self, T, Algo, couple, WinSize=100, MinMaxEpsPerc=0.02):
+  def __init__(self, T, Algo, couple, WinSize=100, MinMaxEpsPerc=0.05):
     self.couple = couple
     self.WinSize = WinSize
     self.MinMaxEpsPerc = MinMaxEpsPerc
