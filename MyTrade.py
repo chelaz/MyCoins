@@ -82,18 +82,19 @@ class MyTrade:
     ts    = self.__tmp_ts
     price = self.__tmp_price
     #print("CheckAndFillOrders ts %d price %f o %s" % (ts, price, str(o)))
+    op = o['price']
     if o['type'] == 'ask':
-      if o['price'] > price:
-        self.FillOrderAsk(price, o['amount'], o['couple'], o['id'], ts=ts)
-        self.__Ha.append([ts, price, o['id']])
-        self.__HF.append([ts, price, o['couple'], dict(self.__F)]) # make copy of balance
+      if op > price:
+        self.FillOrderAsk(op, o['amount'], o['couple'], o['id'], ts=ts)
+        self.__Ha.append([ts, op, o['id']])
+        self.__HF.append([ts, op, o['couple'], dict(self.__F)]) # make copy of balance
 
         Ret=False # remove from list
     else:
-      if o['price'] < price:
-        self.FillOrderBid(price, o['amount'], o['couple'], o['id'], ts=ts)
-        self.__Hb.append([ts, price, o['id']])
-        self.__HF.append([ts, price, o['couple'], dict(self.__F)]) # make copy of balance
+      if op < price:
+        self.FillOrderBid(op, o['amount'], o['couple'], o['id'], ts=ts)
+        self.__Hb.append([ts, op, o['id']])
+        self.__HF.append([ts, op, o['couple'], dict(self.__F)]) # make copy of balance
 
         Ret=False # remove from list
     return Ret
@@ -241,9 +242,9 @@ class MyTrade:
           self.CancelOrders('ask')
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
 
-    print("Order Book:")
-    for o in self.__O:
-      print("  "+str(o))
+    #print("Order Book:")
+    #for o in self.__O:
+    #  print("  "+str(o))
 
 
   def PlaceOrderBid(self, price, amount, couple, ts=0, id='', OnlyAlternating=False, OverwriteOrder=False):
@@ -257,9 +258,9 @@ class MyTrade:
           self.CancelOrders('bid')
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
 
-    print("Order Book:")
-    for o in self.__O:
-      print("  "+str(o))
+    #print("Order Book:")
+    #for o in self.__O:
+    #  print("  "+str(o))
 
     
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
@@ -278,7 +279,9 @@ class MyTrade:
 
     self.__TypeOfLastFilled[id] = [ 'ask', ts ]
 
-    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
+    #print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
+    print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, amount, cur_ask, sell_price, cur_sell, price, cur_sell, cur_ask))
+
 
   def FillOrderBid(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')
@@ -296,7 +299,8 @@ class MyTrade:
 
     self.__TypeOfLastFilled[id] = [ 'bid', ts ]
 
-    print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
+ #  print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
+    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, amount, cur_bid, buy_price, cur_buy, price, cur_buy, cur_bid))
 
   def SellAll(self, price, couple):
     cur=couple.split('_')
