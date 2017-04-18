@@ -294,14 +294,20 @@ class MyRich:
     eps = maxmin*C.MinMaxEpsPerc
 
     if v[1] < min-eps:
+      price = min+maxmin*C.PlaceBidFact
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-      T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+      T.PlaceOrderBid(price, # C.PlaceBidFact*v[1], \
+                      val, C.couple, id='InterBand', ts=ts, \
+                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
     if v[1] > max+eps:
+      price = max-maxmin*C.PlaceAskFact
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-      T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+      T.PlaceOrderAsk(price, #C.PlaceAskFact*v[1], \
+                      val, C.couple, id='InterBand', ts=ts, \
+                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
 
 
@@ -674,17 +680,21 @@ class MyRich:
     Best_Bal=0.0
     Best_WS=0
     Best_P=0
+    Best_Fact=0
     L_WZ = []
 
 #    for w in [100, 290]:
 #    for w in range(100, 400, 10):
     w = 290
+    p = 0.05
     for pi in range(0, 10, 1):
-      p = pi/100
+      pf = pi/100
 
       T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 
       C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w, MinMaxEpsPerc=p) 
+      C.PlaceBidFact = pf
+      C.PlaceAskFact = pf
       C.Print()
       self.SimulateTrading(T, C)
       B=T.GetF()['btc']
@@ -692,10 +702,11 @@ class MyRich:
         Best_Bal = B
         Best_WS  = w
         Best_P  = p
-      print("---------------> WinSize: %5d and Balance: %f, %f\n\n" % (w, B, p))
+        Best_Fact = pf
+      print("---------------> WinSize: %5d and Balance: %f, %f, %f\n\n" % (w, B, p, pf))
  
-      L_WZ.append([w, B, p]) 
-    print("Best_Bal: %f with WinSize: %d, p %f" % (Best_Bal, Best_WS, Best_P)) 
+      L_WZ.append([w, B, p, pf]) 
+    print("Best_Bal: %f with WinSize: %d, p %f, fact %f" % (Best_Bal, Best_WS, Best_P, Best_Fact)) 
    
     for w in L_WZ:
       print("  %s" % str(w))    

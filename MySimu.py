@@ -8,12 +8,12 @@ from MyTrade import MyTrade
 class SimuConf:
   T = None # MyTrade
   WinSize = 100 
-  PlaceBidFact=1.0
-  PlaceAskFact=1.0
+  PlaceBidFact=0.1
+  PlaceAskFact=0.1
 #  PlaceBidFact=0.99
 #  PlaceAskFact=1.01
   OnlyAlternating = True
-  OverwriteOrder = True #currently only if OnlyAlternating
+  OverwriteOrder = False#currently only if OnlyAlternating
   SkipIfSameTS = True
   MinMaxEpsPerc= 0.05
 

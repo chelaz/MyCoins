@@ -108,8 +108,10 @@ class MyTrade:
   def CancelOrders(self, type):
     if type == 'ask':    
       OrdersRemoved=list(filter(self.__CheckTypeBid, self.__O))
+      self.__HaCanceled += len(self.__O)-len(OrdersRemoved)
     else:
       OrdersRemoved=list(filter(self.__CheckTypeAsk, self.__O))
+      self.__HbCanceled += len(self.__O)-len(OrdersRemoved)
  
     Debug=True
     if Debug:
