@@ -13,6 +13,7 @@ class SimuConf:
 #  PlaceBidFact=0.99
 #  PlaceAskFact=1.01
   OnlyAlternating = True
+  OverwriteOrder = True #currently only if OnlyAlternating
   SkipIfSameTS = True
   MinMaxEpsPerc= 0.05
 
