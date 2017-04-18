@@ -50,14 +50,12 @@ class MyTrade:
   def CanceledBid(self):
     return self.__HbCanceled
 
-  # unused
   def HasActiveBid(self):
     for o in self.__O:
       if o['type'] == 'bid':
         return True
     return False
  
-  # unused
   def HasActiveAsk(self):
     for o in self.__O:
       if o['type'] == 'ask':
@@ -99,6 +97,27 @@ class MyTrade:
 
         Ret=False # remove from list
     return Ret
+
+  def __CheckTypeAsk(self, o):
+    return o['type'] == 'ask'
+
+  def __CheckTypeBid(self, o):
+    return o['type'] == 'bid'
+
+  def CancelOrders(self, type):
+    if type == 'ask':    
+      OrdersRemoved=list(filter(self.__CheckTypeBid, self.__O))
+    else:
+      OrdersRemoved=list(filter(self.__CheckTypeAsk, self.__O))
+ 
+    Debug=True
+    if Debug:
+      print("OrdersRemoved: %d of type %s. Remaining Order Book:" % (len(self.__O)-len(OrdersRemoved), type))
+      for o in self.__O:
+        print("  "+str(o))
+
+    self.__O = OrdersRemoved    
+
 
   # {'type':'ask', 'price':price, 'amount':amount, 'couple':couple}
   # ts is current timestamp, age is cur ts minus place order ts
@@ -211,28 +230,38 @@ class MyTrade:
            # lambda v:v[2][currency]*Factor+Add,\
             self.__HF)))
  
-  def PlaceOrderAsk(self, price, amount, couple, ts=0, id='', OnlyAlternating=False):
+  def PlaceOrderAsk(self, price, amount, couple, ts=0, id='', OnlyAlternating=False, OverwriteOrder=False):
     if OnlyAlternating:
       if self.GetTypeOfLastFilled(id) == 'ask':
         return False
       if self.HasActiveAsk():
-        if not C.OverwriteOrder:
+        if not OverwriteOrder:
           return False
         else:
-          return False
+          self.CancelOrders('ask')
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
 
-  def PlaceOrderBid(self, price, amount, couple, ts=0, id='', OnlyAlternating=False):
+    print("Order Book:")
+    for o in self.__O:
+      print("  "+str(o))
+
+
+  def PlaceOrderBid(self, price, amount, couple, ts=0, id='', OnlyAlternating=False, OverwriteOrder=False):
     if OnlyAlternating:
       if self.GetTypeOfLastFilled(id) == 'bid':
         return False
       if self.HasActiveBid():
-        if not C.OverwriteOrder:
+        if not OverwriteOrder:
           return False
         else:
-          return False
+          self.CancelOrders('bid')
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
-     
+
+    print("Order Book:")
+    for o in self.__O:
+      print("  "+str(o))
+
+    
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
   def FillOrderAsk(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')

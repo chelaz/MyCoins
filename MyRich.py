@@ -296,12 +296,12 @@ class MyRich:
     if v[1] < min-eps:
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-      T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating)
+      T.PlaceOrderBid(C.PlaceBidFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
     if v[1] > max+eps:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-      T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating)
+      T.PlaceOrderAsk(C.PlaceAskFact*v[1], val, C.couple, id='InterBand', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
 
 
@@ -766,7 +766,12 @@ class MyRich:
             #print("cmd line weeks: "+str(MyRich.weeks))
             MyRich.week=MyRich.weeks[0]
           else:
-            MyRich.weeks=append(int(s[1]))
+            MyRich.weeks.append(int(s[1]))
+            MyRich.week=int(s[1])
+        else:
+          if "week" in arg:
+            s = arg.split("=")
+            MyRich.weeks.append(int(s[1]))
             MyRich.week=int(s[1])
 
         if "year" in arg:
