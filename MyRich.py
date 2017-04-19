@@ -645,14 +645,14 @@ class MyRich:
   def Crawler(self):
     self.LoadList()
 
-    self.RecPublicTrades("dsh_btc")
+    self.RecPublicTrades("dsh_btc", limit=500)
     self.RecPublicTrades("dsh_eur")
-    self.RecPublicTrades("dsh_usd")
+    self.RecPublicTrades("dsh_usd", limit=500)
     self.RecPublicTrades("btc_usd")
     self.RecPublicTrades("btc_eur")
-    self.RecPublicTrades("eth_btc")
+    self.RecPublicTrades("eth_btc", limit=500)
     self.RecPublicTrades("eth_eur")
-    self.RecPublicTrades("eth_usd")
+    self.RecPublicTrades("eth_usd", limit=500)
     
     self.SaveList()
 
