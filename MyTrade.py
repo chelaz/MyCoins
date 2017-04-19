@@ -11,6 +11,9 @@ class MyTrade:
   __Hb = []   # Orders History bid
   __HF = []   # [[ ts, price, f ] ,...] # f is copy of __F
 
+  __Ea = []   # event ask
+  __Eb = []   # event bid
+
   __HaCanceled = 0
   __HbCanceled = 0
 
@@ -214,6 +217,13 @@ class MyTrade:
   def GetPlotHistBid(self):
     return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
 
+  def GetPlotEventAsk(self):
+    return (list(map(lambda v:v[0], self.__Ea)), list(map(lambda v:v[1],self.__Ea)))
+ 
+  def GetPlotEventBid(self):
+    return (list(map(lambda v:v[0], self.__Eb)), list(map(lambda v:v[1],self.__Eb)))
+
+
   # eg: amount=0.24, price=0.08, base=1.0, currency=dsh
   def RecalcToCurrency(self, uprice, F, couple):
     cur=couple.split('_')
@@ -243,7 +253,8 @@ class MyTrade:
         else:
           self.CancelOrders('ask')
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
-
+    self.__Ea.append([ts, price, 'id'])
+ 
     #print("Order Book:")
     #for o in self.__O:
     #  print("  "+str(o))
@@ -259,7 +270,8 @@ class MyTrade:
         else:
           self.CancelOrders('bid')
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
-
+    self.__Eb.append([ts, price, 'id'])
+ 
     #print("Order Book:")
     #for o in self.__O:
     #  print("  "+str(o))
