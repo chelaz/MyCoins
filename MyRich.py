@@ -296,6 +296,7 @@ class MyRich:
     if v[1] < min-eps:
       price = min+maxmin*C.PlaceBidFact
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
+      print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
       T.PlaceOrderBid(price, # C.PlaceBidFact*v[1], \
                       val, C.couple, id='InterBand', ts=ts, \
@@ -665,11 +666,18 @@ class MyRich:
     C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
  #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=50) 
     self.SimulateTrading(T, C)
+ 
+    T.PrintHistAsk()
+    T.PrintEventAsk()  
+    T.PrintHistBid()
+    T.PrintEventBid()  
   
     PLa=T.GetPlotHistAsk()
     Plb=T.GetPlotHistBid()
     Plf=T.GetPlotHistBalance("btc")
-    return (PLa, Plb, Plf)
+    PEa=T.GetPlotEventAsk()
+    PEb=T.GetPlotEventBid()
+    return (PLa, Plb, Plf, PEa, PEb)
 
   def SimulateTradingMode(self, weeks=[], year=0):
     if not self.LoadWeeks(weeks, year):

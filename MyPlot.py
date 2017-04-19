@@ -114,10 +114,14 @@ DoPlot(R, couple, 'b-', Percentage=False)
 
 if mode == "simulate":
   #linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go', *AskBidPlots[2], 'b-')
-  linesSA,=plt.plot(*AskBidPlots[0], 'ro', label="Ask")
-  linesSB,=plt.plot(*AskBidPlots[1], 'go', label="Bid")
+  linesSA,=plt.plot(*AskBidPlots[0], 'rv', label="Ask", markersize=7)
+  linesSB,=plt.plot(*AskBidPlots[1], 'g^', label="Bid", markersize=7)
   plt.legend([linesSA,linesSB], ['Ask v', 'Bid ^'])
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+
+  plt.plot(*AskBidPlots[3], 'ro', markersize=15, fillstyle='none')
+  plt.plot(*AskBidPlots[4], 'go', markersize=15, fillstyle='none')
+
 ax=ConfigPlot(couple)
 
 if mode == "simulate":

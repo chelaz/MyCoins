@@ -205,6 +205,16 @@ class MyTrade:
     for f in self.__Ha:
       print("  "+str(f))
 
+  def PrintEventAsk(self):
+    print("PrintEventAsk")
+    for f in self.__Ea:
+      print("  "+str(f))
+
+  def PrintEventBid(self):
+    print("PrintEventBid")
+    for f in self.__Eb:
+      print("  "+str(f))
+
   def PrintHistBid(self):
     print("PrintHistBid")
     for f in self.__Hb:
@@ -253,7 +263,7 @@ class MyTrade:
         else:
           self.CancelOrders('ask')
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
-    self.__Ea.append([ts, price, 'id'])
+    self.__Ea.append([ts, price, id])
  
     #print("Order Book:")
     #for o in self.__O:
@@ -270,7 +280,7 @@ class MyTrade:
         else:
           self.CancelOrders('bid')
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
-    self.__Eb.append([ts, price, 'id'])
+    self.__Eb.append([ts, price, id])
  
     #print("Order Book:")
     #for o in self.__O:
