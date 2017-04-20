@@ -72,6 +72,8 @@ class MyRich:
   year=0 # 0 is this year 
   version=0
 
+  C = None # Configuration if set 
+
   # data member
   __A = None  # Instance of BTCeAPI
   __L = []    # Trades History
@@ -82,6 +84,8 @@ class MyRich:
 
   __DataPath = ""
   __StartDate = MyTime()
+
+  __MinMaxL = [] # item: [ts, min, max]
 
   # functions
   def __init__(self, Keys):
@@ -285,6 +289,8 @@ class MyRich:
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
 
+    self.__MinMaxL.append([ts, min, max])
+
     maxmin = max-min
 
     #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
@@ -294,7 +300,8 @@ class MyRich:
     eps = maxmin*C.MinMaxEpsPerc
 
     if v[1] < min-eps:
-      price = min+maxmin*C.PlaceBidFact
+#      price = min+maxmin*C.PlaceBidFact
+      price = min-eps
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
@@ -303,7 +310,8 @@ class MyRich:
                       OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
     if v[1] > max+eps:
-      price = max-maxmin*C.PlaceAskFact
+#     price = max-maxmin*C.PlaceAskFact
+      price = max+eps
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
       T.PlaceOrderAsk(price, #C.PlaceAskFact*v[1], \
@@ -385,7 +393,7 @@ class MyRich:
       if Debug:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
-      T.FillOrders(v[1], ts=ts, age=C.WinSize, Debug=Debug)
+      T.FillOrders(v[1], ts=ts, age=C.WinSize*100, Debug=Debug)
 
       #LastL = L[i-C.WinSize-1:i]
       LastL = L[:i]
@@ -447,7 +455,13 @@ class MyRich:
       return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*factor,L)))
     else:
       return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
-  
+ 
+  def GetMMPlot2(self):
+    MinPlot=(list(map(lambda v:v[0], self.__MinMaxL)), list(map(lambda v:v[1], self.__MinMaxL)))
+    MaxPlot=(list(map(lambda v:v[0], self.__MinMaxL)), list(map(lambda v:v[2], self.__MinMaxL)))
+
+    return MinPlot, MaxPlot
+   
   
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, WinSize, Percentage=False):
@@ -663,14 +677,16 @@ class MyRich:
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
-    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
- #   C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=50) 
+#    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
+    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20) 
+    self.C = C # save for external access
+
     self.SimulateTrading(T, C)
  
-    T.PrintHistAsk()
-    T.PrintEventAsk()  
-    T.PrintHistBid()
-    T.PrintEventBid()  
+#    T.PrintHistAsk()
+#    T.PrintEventAsk()  
+#    T.PrintHistBid()
+#    T.PrintEventBid()  
   
     PLa=T.GetPlotHistAsk()
     Plb=T.GetPlotHistBid()
@@ -715,7 +731,7 @@ class MyRich:
  
       L_WZ.append([w, B, p, pf]) 
     print("Best_Bal: %f with WinSize: %d, p %f, fact %f" % (Best_Bal, Best_WS, Best_P, Best_Fact)) 
-   
+    
     for w in L_WZ:
       print("  %s" % str(w))    
 

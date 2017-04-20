@@ -106,9 +106,17 @@ if mode == "simulate":
 #ConfigPlot(couple_eb)
 
 #plt.subplot(2,1,1)
-MMPlot=R.GetMMPlot(couple, 1*60, Percentage=False)
-lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
-plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+
+if mode != "simulate":
+  MMPlot=R.GetMMPlot(couple, R.C.WinSize, Percentage=False)
+  lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
+  plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
+
+MMPlot2=R.GetMMPlot2()
+lines2=plt.plot(*MMPlot2[0], 'r:', *MMPlot2[1],'g:')
+plt.setp(lines2, linewidth=1, linestyle=':', alpha=0.8)
+
+
 DoPlot(R, couple, 'b-', Percentage=False)
 #ConfigPlot(couple)
 
