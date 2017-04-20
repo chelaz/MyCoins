@@ -155,6 +155,10 @@ class MyRich:
   def _SortByTimestamp(self, item):
     return item[0]
 
+  def _SortByTID(self, item):
+    return item[2]['tid']
+
+
   # Tuples: 
   # V00:  [1490601525, "2017-03-27 09:58:45", "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757, "timestamp": 1490601525}]
   # V01:  [1490601525, "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
@@ -175,9 +179,7 @@ class MyRich:
     
 
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  def BuildMinMaxList2(self, PriceList, winsize):
-
-    Debug=False
+  def BuildMinMaxList2(self, PriceList, winsize, Debug=False):
 
     L=PriceList #self.GetPriceList(couple)
 
@@ -207,7 +209,8 @@ class MyRich:
         cnt += 1
 
       if Debug:
-        print("[%2d] ts %f min: %f max: %f sum: %f cnt: %d" % (i+winsize, v[0], min, max, sum, cnt))
+        print("[%2d] ts %d val %f min: %f max: %f sum: %f cnt: %d" 
+               % (i+winsize, v[0], v[1], min, max, sum, cnt))
  
       MMList.append([v[0], {'min':min, 'max':max, 'amount':sum , 'cnt':cnt }])
   
@@ -289,6 +292,19 @@ class MyRich:
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
 
+    Test=False
+    if Test:
+      if v[1] > max:
+        print("[%d] --------------------------===============> Error: %f > max= %f\n" \
+              % (ts, v[1], max))
+        self.BuildMinMaxList2(L_LastWZ, C.WinSize, Debug=True)
+        exit(0)
+
+      if v[1] < min:
+        print("[%d] --------------------------===============> Error: %f < min= %f\n" \
+              % (ts, v[1], min))
+
+
     self.__MinMaxL.append([ts, min, max])
 
     maxmin = max-min
@@ -301,20 +317,22 @@ class MyRich:
 
     if v[1] < min-eps:
 #      price = min+maxmin*C.PlaceBidFact
-      price = min-eps
+      #price = min-eps
+      price = 0.995*min
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-      T.PlaceOrderBid(price, # C.PlaceBidFact*v[1], \
+      T.PlaceOrderAsk(price, # C.PlaceBidFact*v[1], \
                       val, C.couple, id='InterBand', ts=ts, \
                       OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
     if v[1] > max+eps:
 #     price = max-maxmin*C.PlaceAskFact
-      price = max+eps
+      #price = max+eps
+      price = 1.005*max
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-      T.PlaceOrderAsk(price, #C.PlaceAskFact*v[1], \
+      T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
                       val, C.couple, id='InterBand', ts=ts, \
                       OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
@@ -393,7 +411,7 @@ class MyRich:
       if Debug:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
-      T.FillOrders(v[1], ts=ts, age=C.WinSize*100, Debug=Debug)
+      T.FillOrders(v[1], ts=ts, age=C.WinSize*10, Debug=Debug)
 
       #LastL = L[i-C.WinSize-1:i]
       LastL = L[:i]
@@ -562,7 +580,8 @@ class MyRich:
     LastEntry =MyTime(self.__L[-1][0])
     print(" ..loaded %d entries from %s (w %d) to %s (w %d)\n" % (len(self.__L), FirstEntry.Str(), FirstEntry.Week(), LastEntry.Str(), LastEntry.Week()))
     
-    self.__L=sorted(self.__L, key=self._SortByTimestamp)
+    #self.__L=sorted(self.__L, key=self._SortByTimestamp)
+    self.__L=sorted(self.__L, key=self._SortByTID)
  
     return True
 
@@ -677,8 +696,11 @@ class MyRich:
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
-#    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=290) 
-    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20) 
+    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000) 
+#    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
+    #C.OnlyAlternating=False
+    C.OverwriteOrder=True 
+    C.MinMaxEpsPerc=0.0
     self.C = C # save for external access
 
     self.SimulateTrading(T, C)
@@ -711,7 +733,7 @@ class MyRich:
 #    for w in range(100, 400, 10):
     w = 290
     p = 0.05
-    for pi in range(0, 10, 1):
+    for pi in range(5, 6, 1):
       pf = pi/100
 
       T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 

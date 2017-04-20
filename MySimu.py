@@ -35,12 +35,14 @@ class SimuConf:
           "PlaceBidFact %f, "\
           "PlaceAskFact %f, "\
           "OnlyAlternating %s, "\
+          "OverwriteOrder %s, "\
           "SkipIfSameTS %s" % (\
           self.WinSize, \
           self.MinMaxEpsPerc,
           self.PlaceBidFact,
           self.PlaceAskFact,
           str(self.OnlyAlternating),
+          str(self.OverwriteOrder),
           str(self.SkipIfSameTS)))
 
   def Apply(self, vc, LastL):
