@@ -43,6 +43,10 @@ def DoPlot(R, couple, fmt, ConsiderBalance=False, Percentage=False):
 
   plt.setp(lines, linewidth=0.5)
 
+#def onclick(event):
+#  print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+#        (event.button, event.x, event.y, event.xdata, event.ydata))
+
 def ConfigPlot(couple, ax=None):
   if ax == None:
     ax=plt.gca()
@@ -54,6 +58,10 @@ def ConfigPlot(couple, ax=None):
   ax.grid(True)
   #plt.ylabel(couple)
   ax.set_ylabel(couple)
+
+#  fig=plt.figure()
+#  fig.canvas.mpl_connect('button_press_event', onclick)
+
   return ax
  
 
