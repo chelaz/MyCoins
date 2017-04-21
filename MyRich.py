@@ -71,6 +71,7 @@ class MyRich:
   weeks=[] # list of weeks given by cmd line args comma separated
   year=0 # 0 is this year 
   version=0
+  __filename=""
 
   C = None # Configuration if set 
 
@@ -356,7 +357,8 @@ class MyRich:
     T = C.T
     val = 0.01
     ts = v[0]
-    age = 100
+    #age = 300
+    age = 3600
 
     Prv = self.__Appr_Prev 
 
@@ -384,66 +386,57 @@ class MyRich:
  
     if Prv['min'] == min:
       Prv['mincnt'] += 1
-      if Prv['mincnt'] > age and Prv['minprev'] > min:
-        price = v[1]*1.01
+      #if Prv['mincnt'] > age and Prv['minprev'] > min:
+      if ts-Prv['mints'] > age and Prv['minprev'] > min:
+        #price = v[1]*1.01
+        price = v[1]
         T.PlaceOrderAsk(price, \
                         val, C.couple, id='ApproachExtr', ts=ts, \
                         OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
         Prv['minprev'] = Prv['min']
-        Prv['min']     = min
         Prv['mincnt']  = 1
+        Prv['mints'] = ts
+               
     else:
       Prv['minprev'] = Prv['min']
       Prv['min']     = min
       Prv['mincnt']  = 1
-      
- 
-    #if Prv['min'] == min:
-    #  Prv['mincnt'] += 1
-    #else:
-    #  if Prv['mincnt'] > age and Prv['min'] < min:
-    #    price = v[1]
-    #    T.PlaceOrderAsk(price, \
-    #                    val, C.couple, id='ApproachExtr', ts=ts, \
-    #                    OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-    #    Prv['mints']  = None
-    #  else:
-    #    Prv['mints']  = ts
-    #    Prv['min']    = min
-    #    Prv['mincnt'] = 1
-        
+      Prv['mints'] = ts
 
-    #if Prv['max'] == max:
-    #  Prv['maxcnt'] += 1
-    #else:
-    #  if Prv['maxcnt'] > age and Prv['max'] > max:
-    #    price = v[1]
-    #    T.PlaceOrderBid(price, \
-    #                    val, C.couple, id='ApproachExtr', ts=ts, \
-    #                    OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-    #    Prv['maxts']  = None
-    #  else:
-    #    Prv['maxs']   = ts
-    #    Prv['max']    = max
-    #    Prv['maxcnt'] = 1
-     
-
+    Debug=False
+    if Debug: 
+      print("[%d] %s curmax %f " % (ts, str(Prv), max), end='')
     if Prv['max'] == max:
+      if Debug: 
+        print("==", end='')
       Prv['maxcnt'] += 1
-      if Prv['maxcnt'] > age:
+ #     if Prv['maxcnt'] > age:
+      if ts-Prv['maxts'] > age:
         #print("[%d] maxcnt: %d max %f maxprev %f" % (ts, Prv['maxcnt'], max, Prv['maxprev']))
+        if Debug:
+          print(">age", end='')
         if Prv['maxprev'] < max:
-          price = v[1]*0.99
+          if Debug:
+            print("prev < max", end='')
+          #price = v[1]*0.99
+          price = v[1]
           T.PlaceOrderBid(price, \
                           val, C.couple, id='ApproachExtr', ts=ts, \
                           OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
           Prv['maxprev'] = Prv['max']
           Prv['maxcnt']  = 1
+          Prv['maxts'] = ts
+
     else:
+      if Debug:
+        print("prev != max", end='')
       Prv['maxprev'] = Prv['max']
       Prv['max']     = max
       Prv['maxcnt']  = 1
- 
+      Prv['maxts'] = ts
+    if Debug:
+      print("\n")
+  
 ###########################################
 
 
@@ -491,6 +484,10 @@ class MyRich:
       T.PrintBalance()
 
     L=self.GetPriceList(C.couple)
+
+    if len(L) == 0:
+      print("Length of trade list for %s is 0" % C.couple)
+      return False
 
     #C.WinSize=100
     #PlaceBidFact=0.99
@@ -560,6 +557,7 @@ class MyRich:
     T.PrintStartBalance()
     T.PrintBalance()
     C.Print()
+    return True
 
 ### Plot functions
 
@@ -643,6 +641,8 @@ class MyRich:
     if len(weeks) == 0:
       if not self.LoadList(week=0, year=year):
         return False
+      else:
+        Loaded=True
     else:
       for w in weeks:
         if self.LoadList(week=w, year=year):
@@ -653,12 +653,15 @@ class MyRich:
     if version == None:
       version = self.__V
 
-    if week == 0:
-      week = self.__StartDate.Week()
-    if year == 0:
-      year = self.__StartDate.Year()
+    if self.__filename != "" and week == 0:
+      FileName="%s%s.dat" % (self.__DataPath, self.__filename)
+    else:
+      if week == 0:
+        week = self.__StartDate.Week()
+      if year == 0:
+        year = self.__StartDate.Year()
+      FileName="%sTrades-V%02d-%4d-%02d.dat" % (self.__DataPath, version, year, week)
 
-    FileName="%sTrades-V%02d-%4d-%02d.dat" % (self.__DataPath, version, year, week)
     print("Loading data from "+FileName, end='\n  ', flush=True) 
     if not os.path.isfile(FileName):
       print(" ..does not exist. Aborted.")
@@ -698,6 +701,22 @@ class MyRich:
       self.__L=list(filter(lambda v: v[0] <= self.__ToTS, self.__L))
  
     return True
+
+  def _Save(self, FileName, L=None):
+    if L == None:
+      L = self.__L
+
+    FirstEntry=MyTime(L[0][0])
+    LastEntry =MyTime(L[-1][0])
+
+    f=open(FileName, "w")
+    f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(L), \
+            FirstEntry.Str(), FirstEntry.Week(), FirstEntry.Timestamp(),\
+            LastEntry.Str(),  LastEntry.Week(),  LastEntry.Timestamp()))
+    for v in L:
+      f.write(json.dumps(v)+"\n")
+    f.close()
+                                              
 
   def SaveList(self, version=None):
     #I=self.__A.getInfo()
@@ -741,34 +760,39 @@ class MyRich:
 #          print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
 #          print(str(v))
 
-        L1_FirstEntry=MyTime(L1[0][0])
-        L1_LastEntry =MyTime(L1[-1][0])
+        self._Save(FileNameWk1, L1)
 
-        f=open(FileNameWk1, "w")
-        f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(L1), \
-                                                                                 L1_FirstEntry.Str(), L1_FirstEntry.Week(), L1_FirstEntry.Timestamp(),\
-                                                                                 L1_LastEntry.Str(),  L1_LastEntry.Week(),  L1_LastEntry.Timestamp()))
-        for v in L1:
-          f.write(json.dumps(v)+"\n")
-        f.close()
+#        L1_FirstEntry=MyTime(L1[0][0])
+#        L1_LastEntry =MyTime(L1[-1][0])
+
+#        f=open(FileNameWk1, "w")
+#        f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(L1), \
+#                L1_FirstEntry.Str(), L1_FirstEntry.Week(), L1_FirstEntry.Timestamp(),\
+#                L1_LastEntry.Str(),  L1_LastEntry.Week(),  L1_LastEntry.Timestamp()))
+#        for v in L1:
+#          f.write(json.dumps(v)+"\n")
+#        f.close()
       else:
         LN = self.__L
         FileNameWk2="%sTrades-V%02d-%s.dat" % (self.__DataPath, version, LastEntry.StrWeek())
-
-      LN_FirstEntry=MyTime(LN[0][0])
-      LN_LastEntry =MyTime(LN[-1][0])
-
+      
       print("Saving data (%d entries) to %s" %(len(LN), FileNameWk2)) 
+      self._Save(FileNameWk2, LN)
+                
+      #LN_FirstEntry=MyTime(LN[0][0])
+      #LN_LastEntry =MyTime(LN[-1][0])
+
 #      for v in LN:
 #        print("Wk[%s] " % MyTime(v[0]).strWeek(), end='')
 #        print(str(v))
-      f=open(FileNameWk2, "w")
-      f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(LN), \
-                                                                                 LN_FirstEntry.Str(), LN_FirstEntry.Week(), LN_FirstEntry.Timestamp(),\
-                                                                                 LN_LastEntry.Str(),  LN_LastEntry.Week(),  LN_LastEntry.Timestamp()))
-      for v in LN:
-        f.write(json.dumps(v)+"\n")
-      f.close()
+
+      #f=open(FileNameWk2, "w")
+      #f.write("#Num entries: %d \t from \t%s (w %d ts %d) \t to \t%s (w %d ts %d)\n" % (len(LN), \
+      #        LN_FirstEntry.Str(), LN_FirstEntry.Week(), LN_FirstEntry.Timestamp(),\
+      #        LN_LastEntry.Str(),  LN_LastEntry.Week(),  LN_LastEntry.Timestamp()))
+      #for v in LN:
+      #  f.write(json.dumps(v)+"\n")
+      #f.close()
 
 
   #  V01:  [1490601525, "dsh_eur", {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
@@ -787,7 +811,11 @@ class MyRich:
   def RemoveDuplicatesMode(self, week=0, year=0):
     if self.LoadList(week=week, year=year):
       self.RemoveDuplicates()
-      self.SaveList()
+
+      if self.__filename != "":
+        self._Save(self.__filename+".dat", self.__L)
+      else:
+        self.SaveList()
 
 
   def Crawler(self):
@@ -811,9 +839,9 @@ class MyRich:
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=1000)
+    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=100)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
-    C.OnlyAlternating=False
+    #C.OnlyAlternating=False
     C.OverwriteOrder=True 
     C.MinMaxEpsPerc=0.0
     self.C = C # save for external access
@@ -946,6 +974,10 @@ class MyRich:
             MyRich.weeks.append(int(s[1]))
             MyRich.week=int(s[1])
 
+        if "fn" in arg:
+          s = arg.split("=")
+          MyRich.__filename=s[1]
+
         if "year" in arg:
           s = arg.split("=")
           MyRich.year=int(s[1])
@@ -972,7 +1004,7 @@ class MyRich:
             ModeStr = ModeStr+" ["+m+"]"
            
           print("Usage:")
-          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [weeks=w1,..,wn] [fromts=0] [tots=0] [debugts=0]" % (argv[0], ModeStr))
+          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [weeks=w1,..,wn] [fn=FILENAME] [fromts=0] [tots=0] [debugts=0]" % (argv[0], ModeStr))
           mode="help"
 
     return mode

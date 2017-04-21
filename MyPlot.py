@@ -79,6 +79,7 @@ if len(sys.argv) > 1:
 #R.Info()
 
 if not R.LoadWeeks(weeks=MyRich.weeks, year=0):
+  print("exiting")
   exit(0)
 #R.LoadList(week=13)
 #R.LoadList(week=14)
@@ -102,7 +103,11 @@ couple=couple_db
 if mode == "simulate":
   AskBidPlots=R.SimulateTradingAndPlot(couple)
   R.PrintElapsed("Simulate Trading")
-  
+ 
+  #if len(AskBidPlots[0][0]) == 0:
+  #  print("Plot is empty")
+  #  exit(0)
+      
 #plt.subplot(3,1,1)
 #DoPlot(R, couple_db, 'b-', ConsiderBalance=False, Percentage=True)
 #DoPlot(R, couple_de, 'g-', ConsiderBalance=False, Percentage=True)
@@ -135,11 +140,13 @@ if mode == "simulate":
   plt.legend([linesSA,linesSB], ['Ask v', 'Bid ^'])
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
-  # print labels for bid
-  for i in range(len(AskBidPlots[1][0])):
-    ts=AskBidPlots[1][0][i]
-    v=AskBidPlots[1][1][i]
-    plt.annotate(str(ts), xy=(ts, v), xytext=(ts, v*0.9), arrowprops=dict(arrowstyle='->'), ) #arrowprops=dict(facecolor='black', shrink=1.0),)
+  PrintLabels=False
+  if PrintLabels:
+    # print labels for bid
+    for i in range(len(AskBidPlots[1][0])):
+      ts=AskBidPlots[1][0][i]
+      v=AskBidPlots[1][1][i]
+      plt.annotate(str(ts), xy=(ts, v), xytext=(ts, v*0.9), arrowprops=dict(arrowstyle='->'), ) #arrowprops=dict(facecolor='black', shrink=1.0),)
 
   plt.plot(*AskBidPlots[3], 'ro', markersize=15, fillstyle='none')
   plt.plot(*AskBidPlots[4], 'go', markersize=15, fillstyle='none')
