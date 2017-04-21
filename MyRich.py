@@ -81,6 +81,8 @@ class MyRich:
   __V = 1     # File Version
 
   __DebugTS=0
+  __FromTS=0
+  __ToTS=0
 
   __DataPath = ""
   __StartDate = MyTime()
@@ -101,6 +103,12 @@ class MyRich:
 
   def SetDebugTS(self, ts):
     self.__DebugTS = ts
+
+  def SetFromTS(self, ts):
+    self.__FromTS = ts
+
+  def SetToTS(self, ts):
+    self.__ToTS = ts
 
   def PrintElapsed(self, Str=""):
     print("_> ", end='')
@@ -423,7 +431,7 @@ class MyRich:
     if Prv['max'] == max:
       Prv['maxcnt'] += 1
       if Prv['maxcnt'] > age:
-        print("[%d] maxcnt: %d max %f maxprev %f" % (ts, Prv['maxcnt'], max, Prv['maxprev']))
+        #print("[%d] maxcnt: %d max %f maxprev %f" % (ts, Prv['maxcnt'], max, Prv['maxprev']))
         if Prv['maxprev'] < max:
           price = v[1]*0.99
           T.PlaceOrderBid(price, \
@@ -683,6 +691,11 @@ class MyRich:
     
     #self.__L=sorted(self.__L, key=self._SortByTimestamp)
     self.__L=sorted(self.__L, key=self._SortByTID)
+
+    if self.__FromTS > 0:
+      self.__L=list(filter(lambda v: v[0] >= self.__FromTS, self.__L))
+    if self.__ToTS > 0:
+      self.__L=list(filter(lambda v: v[0] <= self.__ToTS, self.__L))
  
     return True
 
@@ -941,6 +954,14 @@ class MyRich:
           s = arg.split("=")
           self.SetDebugTS(int(s[1]))
 
+        if "fromts" in arg:
+          s = arg.split("=")
+          self.SetFromTS(int(s[1]))
+
+        if "tots" in arg:
+          s = arg.split("=")
+          self.SetToTS(int(s[1]))
+
         if "path" in arg:
           s = arg.split("=")
           self.SetDataPath(s[1])
@@ -951,7 +972,7 @@ class MyRich:
             ModeStr = ModeStr+" ["+m+"]"
            
           print("Usage:")
-          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [weeks=w1,..,wn] [debugts=0]" % (argv[0], ModeStr))
+          print("  %s [help] [path=/DATA_PATH]%s [version=0] [year=0] [weeks=w1,..,wn] [fromts=0] [tots=0] [debugts=0]" % (argv[0], ModeStr))
           mode="help"
 
     return mode
