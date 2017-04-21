@@ -135,6 +135,12 @@ if mode == "simulate":
   plt.legend([linesSA,linesSB], ['Ask v', 'Bid ^'])
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
+  # print labels for bid
+  for i in range(len(AskBidPlots[1][0])):
+    ts=AskBidPlots[1][0][i]
+    v=AskBidPlots[1][1][i]
+    plt.annotate(str(ts), xy=(ts, v), xytext=(ts, v*0.9), arrowprops=dict(arrowstyle='->'), ) #arrowprops=dict(facecolor='black', shrink=1.0),)
+
   plt.plot(*AskBidPlots[3], 'ro', markersize=15, fillstyle='none')
   plt.plot(*AskBidPlots[4], 'go', markersize=15, fillstyle='none')
 

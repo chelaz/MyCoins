@@ -86,6 +86,8 @@ class MyRich:
   __StartDate = MyTime()
 
   __MinMaxL = [] # item: [ts, min, max]
+  
+  __Appr_Prev = {'mints':None, 'maxts':None} 
 
   # functions
   def __init__(self, Keys):
@@ -318,7 +320,7 @@ class MyRich:
     if v[1] < min-eps:
 #      price = min+maxmin*C.PlaceBidFact
       #price = min-eps
-      price = 0.995*min
+      price = 0.985*min
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
       print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
@@ -329,13 +331,112 @@ class MyRich:
     if v[1] > max+eps:
 #     price = max-maxmin*C.PlaceAskFact
       #price = max+eps
-      price = 1.005*max
+      price = 1.015*max
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
       T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
                       val, C.couple, id='InterBand', ts=ts, \
                       OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
 
+
+###########################################
+
+  # vc:    current price
+  # LastL: last traded values list
+  # C:     SimuConf
+  def SimuApproachExtr(self, v, LastL, C):
+    T = C.T
+    val = 0.01
+    ts = v[0]
+    age = 100
+
+    Prv = self.__Appr_Prev 
+
+    L_LastWZ = LastL[-C.WinSize-1:]
+
+    MMList = self.BuildMinMaxList2(L_LastWZ, C.WinSize)
+    min=MMList[0][1]['min']
+    max=MMList[0][1]['max']
+
+    self.__MinMaxL.append([ts, min, max])
+
+    if Prv['mints'] == None:
+      Prv['mints'] = ts
+      Prv['min'] = min
+      Prv['minprev'] = min
+      Prv['mincnt'] = 1
+      return   
+
+    if Prv['maxts'] == None:
+      Prv['maxts'] = ts
+      Prv['max'] = max
+      Prv['maxprev'] = max
+      Prv['maxcnt'] = 1
+      return
+ 
+    if Prv['min'] == min:
+      Prv['mincnt'] += 1
+      if Prv['mincnt'] > age and Prv['minprev'] > min:
+        price = v[1]*1.01
+        T.PlaceOrderAsk(price, \
+                        val, C.couple, id='ApproachExtr', ts=ts, \
+                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+        Prv['minprev'] = Prv['min']
+        Prv['min']     = min
+        Prv['mincnt']  = 1
+    else:
+      Prv['minprev'] = Prv['min']
+      Prv['min']     = min
+      Prv['mincnt']  = 1
+      
+ 
+    #if Prv['min'] == min:
+    #  Prv['mincnt'] += 1
+    #else:
+    #  if Prv['mincnt'] > age and Prv['min'] < min:
+    #    price = v[1]
+    #    T.PlaceOrderAsk(price, \
+    #                    val, C.couple, id='ApproachExtr', ts=ts, \
+    #                    OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+    #    Prv['mints']  = None
+    #  else:
+    #    Prv['mints']  = ts
+    #    Prv['min']    = min
+    #    Prv['mincnt'] = 1
+        
+
+    #if Prv['max'] == max:
+    #  Prv['maxcnt'] += 1
+    #else:
+    #  if Prv['maxcnt'] > age and Prv['max'] > max:
+    #    price = v[1]
+    #    T.PlaceOrderBid(price, \
+    #                    val, C.couple, id='ApproachExtr', ts=ts, \
+    #                    OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+    #    Prv['maxts']  = None
+    #  else:
+    #    Prv['maxs']   = ts
+    #    Prv['max']    = max
+    #    Prv['maxcnt'] = 1
+     
+
+    if Prv['max'] == max:
+      Prv['maxcnt'] += 1
+      if Prv['maxcnt'] > age:
+        print("[%d] maxcnt: %d max %f maxprev %f" % (ts, Prv['maxcnt'], max, Prv['maxprev']))
+        if Prv['maxprev'] < max:
+          price = v[1]*0.99
+          T.PlaceOrderBid(price, \
+                          val, C.couple, id='ApproachExtr', ts=ts, \
+                          OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+          Prv['maxprev'] = Prv['max']
+          Prv['maxcnt']  = 1
+    else:
+      Prv['maxprev'] = Prv['max']
+      Prv['max']     = max
+      Prv['maxcnt']  = 1
+ 
+###########################################
 
 
   # vc:    current price
@@ -696,9 +797,10 @@ class MyRich:
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
-    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000) 
+#    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
+    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=1000)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
-    #C.OnlyAlternating=False
+    C.OnlyAlternating=False
     C.OverwriteOrder=True 
     C.MinMaxEpsPerc=0.0
     self.C = C # save for external access
