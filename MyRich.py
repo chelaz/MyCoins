@@ -357,8 +357,9 @@ class MyRich:
     T = C.T
     val = 0.01
     ts = v[0]
-    #age = 300
-    age = 3600
+    age = 300
+   # age = 3600
+    #age = 8000
 
     Prv = self.__Appr_Prev 
 
@@ -387,7 +388,8 @@ class MyRich:
     if Prv['min'] == min:
       Prv['mincnt'] += 1
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
-      if ts-Prv['mints'] > age and Prv['minprev'] > min:
+      if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
+        print("Age %d cnt %d" % (ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = v[1]
         T.PlaceOrderAsk(price, \
@@ -396,13 +398,17 @@ class MyRich:
         Prv['minprev'] = Prv['min']
         Prv['mincnt']  = 1
         Prv['mints'] = ts
+        if C.OnlyAlternating:
+          Prv['maxts'] = ts
                
     else:
       Prv['minprev'] = Prv['min']
       Prv['min']     = min
       Prv['mincnt']  = 1
       Prv['mints'] = ts
-
+      if C.OnlyAlternating:
+        Prv['maxts'] = ts
+ 
     Debug=False
     if Debug: 
       print("[%d] %s curmax %f " % (ts, str(Prv), max), end='')
@@ -411,28 +417,29 @@ class MyRich:
         print("==", end='')
       Prv['maxcnt'] += 1
  #     if Prv['maxcnt'] > age:
-      if ts-Prv['maxts'] > age:
-        #print("[%d] maxcnt: %d max %f maxprev %f" % (ts, Prv['maxcnt'], max, Prv['maxprev']))
+      if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
+        print("Age %d cnt %d" % (ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
-          print(">age", end='')
-        if Prv['maxprev'] < max:
-          if Debug:
-            print("prev < max", end='')
-          #price = v[1]*0.99
-          price = v[1]
-          T.PlaceOrderBid(price, \
-                          val, C.couple, id='ApproachExtr', ts=ts, \
-                          OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-          Prv['maxprev'] = Prv['max']
-          Prv['maxcnt']  = 1
-          Prv['maxts'] = ts
-
+          print("prev < max", end='')
+        #price = v[1]*0.99
+        price = v[1]
+        T.PlaceOrderBid(price, \
+                        val, C.couple, id='ApproachExtr', ts=ts, \
+                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+        Prv['maxprev'] = Prv['max']
+        Prv['maxcnt']  = 1
+        if C.OnlyAlternating:
+          Prv['mints'] = ts
+        Prv['maxts'] = ts
+ 
     else:
       if Debug:
         print("prev != max", end='')
       Prv['maxprev'] = Prv['max']
       Prv['max']     = max
       Prv['maxcnt']  = 1
+      if C.OnlyAlternating:
+        Prv['mints'] = ts
       Prv['maxts'] = ts
     if Debug:
       print("\n")
@@ -839,9 +846,9 @@ class MyRich:
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
  
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=100)
+    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=2000)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
-    #C.OnlyAlternating=False
+    C.OnlyAlternating=False
     C.OverwriteOrder=True 
     C.MinMaxEpsPerc=0.0
     self.C = C # save for external access
