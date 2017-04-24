@@ -322,7 +322,7 @@ class MyTrade:
     self.__TypeOfLastFilled[id] = [ 'ask', ts ]
 
     #print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
-    print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, amount, cur_ask, sell_price, cur_sell, price, cur_sell, cur_ask))
+    print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s id: %s" % (ts, amount, cur_ask, sell_price, cur_sell, price, cur_sell, cur_ask, id))
 
 
   def FillOrderBid(self, price, amount, couple, id='', ts=0):
@@ -342,7 +342,7 @@ class MyTrade:
     self.__TypeOfLastFilled[id] = [ 'bid', ts ]
 
  #  print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
-    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, amount, cur_bid, buy_price, cur_buy, price, cur_buy, cur_bid))
+    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s id: %s" % (ts, amount, cur_bid, buy_price, cur_buy, price, cur_buy, cur_bid, id))
 
   def SellAll(self, price, couple):
     cur=couple.split('_')
@@ -368,9 +368,7 @@ class MyTrade:
     else:
       self.FillOrderBid(price, self.__F[cur_buy]-self.__StartBalance[cur_buy], couple, id='FinalFill')
 
-
     self.PrintBalance()
-
                               
 
         

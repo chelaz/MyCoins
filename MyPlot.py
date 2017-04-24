@@ -140,7 +140,7 @@ if mode == "simulate":
   plt.legend([linesSA,linesSB], ['Ask v', 'Bid ^'])
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
-  PrintLabels=False
+  PrintLabels = False
   if PrintLabels:
     # print labels for bid
     for i in range(len(AskBidPlots[1][0])):

@@ -660,11 +660,13 @@ class MyRich:
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
 
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(T, Algo=self.__A.SimuApproachExtr, couple=couple, WinSize=2000)
-    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
+    C=SimuConf(T, couple=couple, WinSize=2000, \
+               Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
+               )
+#    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
-    C.OnlyAlternating=False
-    C.OverwriteOrder=True 
+    #C.OnlyAlternating=False
+    #C.OverwriteOrder=True 
     C.MinMaxEpsPerc=0.0
     self.C = C # save for external access
 
