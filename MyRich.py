@@ -661,6 +661,7 @@ class MyRich:
 
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(T, Algo=self.__A.SimuApproachExtr, couple=couple, WinSize=2000)
+    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
     C.OnlyAlternating=False
     C.OverwriteOrder=True 

@@ -69,6 +69,24 @@ class MyTrade:
     if not id in self.__TypeOfLastFilled:
       return ''
     return self.__TypeOfLastFilled[id][0]
+
+  # returns tuple ('ask'/'bid', ts, price, id)
+  def GetLastFilled(self):
+    if len(self.__Ha) == 0:
+      if len(self.__Hb) == 0:
+        return None
+      else:
+        return ('bid', *self.__Hb[-1])
+    else:
+      if len(self.__Hb) == 0:
+        return ('ask', *self.__Ha[-1])
+
+    # check younger timestamp
+    if self.__Ha[-1][0] > self.__Hb[-1][0]:
+      # last filled was 'ask'
+      return ('ask', *self.__Ha[-1])
+    else:
+      return ('bid', *self.__Hb[-1])
  
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
@@ -89,14 +107,14 @@ class MyTrade:
     if o['type'] == 'ask':
       if op > price:
         self.FillOrderAsk(op, o['amount'], o['couple'], o['id'], ts=ts)
-        self.__Ha.append([ts, op, o['id']])
+        self.__Ha.append([ts, op, o['id']])                     # add to ask history
         self.__HF.append([ts, op, o['couple'], dict(self.__F)]) # make copy of balance
 
         Ret=False # remove from list
     else:
       if op < price:
         self.FillOrderBid(op, o['amount'], o['couple'], o['id'], ts=ts)
-        self.__Hb.append([ts, op, o['id']])
+        self.__Hb.append([ts, op, o['id']])                     # add to bid history
         self.__HF.append([ts, op, o['couple'], dict(self.__F)]) # make copy of balance
 
         Ret=False # remove from list

@@ -249,4 +249,25 @@ class MyAlgos:
         T.PlaceOrderAsk(p, val, C.couple, id='IntraBand', ts=ts)
 
 
+  def AStopLoss(self, v, LastL, C):
+    val = 0.01
+    ts = v[0]
+    p  = v[1]
+
+    LastFilled = C.T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+
+    # Buy very first:
+    if LastFilled == None:
+      price = p*0.99
+      C.T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+      return
+
+    if LastFilled[0] == 'ask':
+      if p < LastFilled[2]:
+        price = p*0.99
+        C.T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
+    else:
+      if p > LastFilled[2]:
+        price = p*1.01
+        C.T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
 
