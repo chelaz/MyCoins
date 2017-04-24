@@ -26,6 +26,8 @@ from btceapi import api
 from Keys import Keys
 from MyTrade import MyTrade
 from MySimu import SimuConf
+from MyAlgos import MyAlgos
+
 class MyTime:
   __datetime = None
 
@@ -76,10 +78,11 @@ class MyRich:
   C = None # Configuration if set 
 
   # data member
-  __A = None  # Instance of BTCeAPI
+  __API = None  # Instance of BTCeAPI
   __L = []    # Trades History
   __F = []    # Funds
   __V = 1     # File Version
+  __A = None  # MyAlgos
 
   __DebugTS=0
   __FromTS=0
@@ -88,13 +91,12 @@ class MyRich:
   __DataPath = ""
   __StartDate = MyTime()
 
-  __MinMaxL = [] # item: [ts, min, max]
-  
-  __Appr_Prev = {'mints':None, 'maxts':None} 
+  #__MinMaxL = [] # item: [ts, min, max]
 
   # functions
   def __init__(self, Keys):
-    self.__A = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
+    self.__API = api(api_key=Keys.Key, api_secret=Keys.Secret, wait_for_nonce=True)
+    self.__A   = MyAlgos()
 
   def SetDataPath(self, DataPath):
     if DataPath[-1] != '/':
@@ -120,7 +122,7 @@ class MyRich:
     return self.__StartDate
 
   def Info(self):
-    I=self.__A.getInfo()
+    I=self.__API.getInfo()
     print("Info:\n  Balance from Server:")
     #print(I)
     self.__F=I['return']['funds']
@@ -142,7 +144,7 @@ class MyRich:
     self.__L = []
 
   def TransHist(self, BeginDay, EndDay):
-    History=self.__A.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
+    History=self.__API.TransHistory(tfrom="", tcount="", tfrom_id="", tend_id="", torder="ASC", tsince=BeginDay, tend=EndDay)
     #print(History)
 
     if (History and History['success']):
@@ -153,7 +155,7 @@ class MyRich:
         print(Ret[v])
 
   def PublicTrades(self, couple):
-    T=self.__A.get_param3(couple, method='trades', param="limit=100")
+    T=self.__API.get_param3(couple, method='trades', param="limit=100")
 
     cnt=0
     for v in T[couple]:
@@ -285,195 +287,6 @@ class MyRich:
     
     return MMList       
 
-### Simu Algos
-
-  # vc:    current price
-  # LastL: last traded values list
-  # C:     SimuConf
-  def SimuInterBand(self, v, LastL, C):
-    T = C.T
-    val = 0.01
-    ts = v[0]
-
-    L_LastWZ = LastL[-C.WinSize-1:]
-
-    #print("Len of LastL: old %d new: %d\n" % (len(LastL[-C.WinSize-1:]), len(LastL)))
-    MMList = self.BuildMinMaxList2(L_LastWZ, C.WinSize)
-#    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
-    min=MMList[0][1]['min']
-    max=MMList[0][1]['max']
-
-    Test=False
-    if Test:
-      if v[1] > max:
-        print("[%d] --------------------------===============> Error: %f > max= %f\n" \
-              % (ts, v[1], max))
-        self.BuildMinMaxList2(L_LastWZ, C.WinSize, Debug=True)
-        exit(0)
-
-      if v[1] < min:
-        print("[%d] --------------------------===============> Error: %f < min= %f\n" \
-              % (ts, v[1], min))
-
-
-    self.__MinMaxL.append([ts, min, max])
-
-    maxmin = max-min
-
-    #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
-    #                       v[1]-min, min, v[1], max, max-v[1], \
-    #                       C.WinSize))
-
-    eps = maxmin*C.MinMaxEpsPerc
-
-    if v[1] < min-eps:
-#      price = min+maxmin*C.PlaceBidFact
-      #price = min-eps
-      price = 0.985*min
-      #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
-      print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
-      #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-      T.PlaceOrderAsk(price, # C.PlaceBidFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts, \
-                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-
-    if v[1] > max+eps:
-#     price = max-maxmin*C.PlaceAskFact
-      #price = max+eps
-      price = 1.015*max
-      #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
-      #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-      T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts, \
-                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-
-
-###########################################
-
-  # vc:    current price
-  # LastL: last traded values list
-  # C:     SimuConf
-  def SimuApproachExtr(self, v, LastL, C):
-    T = C.T
-    val = 0.01
-    ts = v[0]
-    age = 300
-   # age = 3600
-    #age = 8000
-
-    Prv = self.__Appr_Prev 
-
-    L_LastWZ = LastL[-C.WinSize-1:]
-
-    MMList = self.BuildMinMaxList2(L_LastWZ, C.WinSize)
-    min=MMList[0][1]['min']
-    max=MMList[0][1]['max']
-
-    self.__MinMaxL.append([ts, min, max])
-
-    if Prv['mints'] == None:
-      Prv['mints'] = ts
-      Prv['min'] = min
-      Prv['minprev'] = min
-      Prv['mincnt'] = 1
-      return   
-
-    if Prv['maxts'] == None:
-      Prv['maxts'] = ts
-      Prv['max'] = max
-      Prv['maxprev'] = max
-      Prv['maxcnt'] = 1
-      return
- 
-    if Prv['min'] == min:
-      Prv['mincnt'] += 1
-      #if Prv['mincnt'] > age and Prv['minprev'] > min:
-      if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
-        print("Age %d cnt %d" % (ts-Prv['mints'], Prv['mincnt']))
-        #price = v[1]*1.01
-        price = v[1]
-        T.PlaceOrderAsk(price, \
-                        val, C.couple, id='ApproachExtr', ts=ts, \
-                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-        Prv['minprev'] = Prv['min']
-        Prv['mincnt']  = 1
-        Prv['mints'] = ts
-        if C.OnlyAlternating:
-          Prv['maxts'] = ts
-               
-    else:
-      Prv['minprev'] = Prv['min']
-      Prv['min']     = min
-      Prv['mincnt']  = 1
-      Prv['mints'] = ts
-      if C.OnlyAlternating:
-        Prv['maxts'] = ts
- 
-    Debug=False
-    if Debug: 
-      print("[%d] %s curmax %f " % (ts, str(Prv), max), end='')
-    if Prv['max'] == max:
-      if Debug: 
-        print("==", end='')
-      Prv['maxcnt'] += 1
- #     if Prv['maxcnt'] > age:
-      if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
-        print("Age %d cnt %d" % (ts-Prv['maxts'], Prv['maxcnt']))
-        if Debug:
-          print("prev < max", end='')
-        #price = v[1]*0.99
-        price = v[1]
-        T.PlaceOrderBid(price, \
-                        val, C.couple, id='ApproachExtr', ts=ts, \
-                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
-        Prv['maxprev'] = Prv['max']
-        Prv['maxcnt']  = 1
-        if C.OnlyAlternating:
-          Prv['mints'] = ts
-        Prv['maxts'] = ts
- 
-    else:
-      if Debug:
-        print("prev != max", end='')
-      Prv['maxprev'] = Prv['max']
-      Prv['max']     = max
-      Prv['maxcnt']  = 1
-      if C.OnlyAlternating:
-        Prv['mints'] = ts
-      Prv['maxts'] = ts
-    if Debug:
-      print("\n")
-  
-###########################################
-
-
-  # vc:    current price
-  # LastL: last traded values list
-  # C:     SimuConf
-  def SimuIntraBand(self, v, LastL, C):
-    T = C.T
-    val = 0.01
-    ts = v[0]
-    p  = v[1]
-
-    #print("SimuIntraBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
-
-    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
-
-    min = MMList[0][1]['min']
-    max = MMList[0][1]['max']
-    
-    if (max-min)*0.9+min < p and p < max:
-      print("----------------------------------->Curval top: %f < %f=max" % (p, max))
-      if T.GetTypeOfLastFilled('IntraBand') != 'bid':
-        T.PlaceOrderBid(p, val, C.couple, id='IntraBand', ts=ts)
-
-    if (max-min)*0.1+min > p and p > min:
-      print("----------------------------------->Curval bottom: %f > %f=min" % (p, min))
-      if T.GetTypeOfLastFilled('IntraBand') != 'ask':
-        T.PlaceOrderAsk(p, val, C.couple, id='IntraBand', ts=ts)
-
-
 ### Simulate Trading functions
 
   # T: MyTrade
@@ -589,8 +402,9 @@ class MyRich:
       return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
  
   def GetMMPlot2(self):
-    MinPlot=(list(map(lambda v:v[0], self.__MinMaxL)), list(map(lambda v:v[1], self.__MinMaxL)))
-    MaxPlot=(list(map(lambda v:v[0], self.__MinMaxL)), list(map(lambda v:v[2], self.__MinMaxL)))
+    MML = self.__A.GetMinMaxList()
+    MinPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[1], MML)))
+    MaxPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[2], MML)))
 
     return MinPlot, MaxPlot
    
@@ -611,7 +425,7 @@ class MyRich:
 ### Crawler
 
   def RecPublicTrades(self, couple, limit=2000):
-    T=self.__A.get_param3(couple, method='trades', param="limit=%d"%limit)
+    T=self.__API.get_param3(couple, method='trades', param="limit=%d"%limit)
 
     cnt=0
     new=0
@@ -726,7 +540,7 @@ class MyRich:
                                               
 
   def SaveList(self, version=None):
-    #I=self.__A.getInfo()
+    #I=self.__API.getInfo()
     #SrvTm = MyTime(I['return']['server_time'])
   
     if version == None:
@@ -844,9 +658,9 @@ class MyRich:
     #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
     T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 #    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
- 
+
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(T, Algo=self.SimuApproachExtr, couple=couple, WinSize=2000)
+    C=SimuConf(T, Algo=self.__A.SimuApproachExtr, couple=couple, WinSize=2000)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
     C.OnlyAlternating=False
     C.OverwriteOrder=True 
