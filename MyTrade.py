@@ -276,16 +276,21 @@ class MyTrade:
  
   def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
     if self.__C.OnlyAlternating:
-      if self.GetTypeOfLastFilled(id) == 'ask':
-        return False
+      #if self.GetTypeOfLastFilled(id) == 'ask':
+      LF=self.GetLastFilled()
+      if LF != None:
+        if LF[0] == 'ask':
+          print("(a)", end='')
+          return False
       if self.HasActiveAsk():
         if not self.__C.OverwriteOrder:
+          print("(o)", end='')
           return False
         else:
           self.CancelOrders('ask')
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
     self.__Ea.append([ts, price, id])
- 
+    return True 
     #print("Order Book:")
     #for o in self.__O:
     #  print("  "+str(o))
@@ -293,8 +298,11 @@ class MyTrade:
 
   def PlaceOrderBid(self, price, amount, couple, ts=0, id=''):
     if self.__C.OnlyAlternating:
-      if self.GetTypeOfLastFilled(id) == 'bid':
-        return False
+      #if self.GetTypeOfLastFilled(id) == 'bid':
+      LF=self.GetLastFilled()
+      if LF != None:
+        if LF[0] == 'bid':
+          return False
       if self.HasActiveBid():
         if not self.__C.OverwriteOrder:
           return False
@@ -302,7 +310,7 @@ class MyTrade:
           self.CancelOrders('bid')
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
     self.__Eb.append([ts, price, id])
- 
+    return True 
     #print("Order Book:")
     #for o in self.__O:
     #  print("  "+str(o))

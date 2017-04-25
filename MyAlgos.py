@@ -139,6 +139,14 @@ class MyAlgos:
    # age = 3600
     #age = 8000
 
+    LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+
+    # Buy very first:
+    if LastFilled == None:
+      price = v[1] # *0.99
+      T.PlaceOrderAsk(price, val, C.couple, id='first', ts=ts)
+      return True
+ 
     Prv = self.__Appr_Prev 
 
     L_LastWZ = LastL[-C.WinSize-1:]
@@ -167,7 +175,7 @@ class MyAlgos:
       Prv['mincnt'] += 1
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
       if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
-        print("Age %d cnt %d" % (ts-Prv['mints'], Prv['mincnt']))
+        print("Age %d cnt %d (ask)" % (ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = v[1]
         T.PlaceOrderAsk(price, \
@@ -196,7 +204,7 @@ class MyAlgos:
       Prv['maxcnt'] += 1
  #     if Prv['maxcnt'] > age:
       if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
-        print("Age %d cnt %d" % (ts-Prv['maxts'], Prv['maxcnt']))
+        print("Age %d cnt %d (Bid)" % (ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
           print("prev < max", end='')
         #price = v[1]*0.99
@@ -264,13 +272,19 @@ class MyAlgos:
     ts = v[0]
     p  = v[1]
     T  = self.__T
+ 
+    min = self.__MinMaxL[-1][1]
+    max = self.__MinMaxL[-1][2]
+
+    #print("mmlist: %s. min/max: %f/%f" % (str(self.__MinMaxL[-1]), min, max))
+
 
     LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
 
     # Buy very first:
     if LastFilled == None:
       price = p # *0.99
-      T.PlaceOrderAsk(price, val, C.couple, id='ApproachExtr', ts=ts)
+      T.PlaceOrderAsk(price, val, C.couple, id='StoppLoss', ts=ts)
       return True
   
     #print(str(LastFilled))
@@ -279,14 +293,16 @@ class MyAlgos:
       return False
 
     if LastFilled[0] == 'ask':
-      if p < LastFilled[2]*1.05:
-        price = p #LastFilled[2] *0.99
+      if p < min: #LastFilled[2]*1.05:
+        price = min*1.01 #LastFilled[2] *0.99
         T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
-      if p*1.05 > LastFilled[2]:
-        price = p # LastFilled[2] *1.01
-        T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+      #print("lastfilled bid. p %f max %f" % (p, max))
+      if p > max: #LastFilled[2]:
+        price = max*0.99 #LastFilled[2] *1.01
+        res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+        print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
         Placed=True
     return Placed
 
