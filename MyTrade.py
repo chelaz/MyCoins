@@ -3,8 +3,10 @@
 import datetime
 import sys
 
-class MyTrade:
+from MySimu import SimuConf
 
+class MyTrade:
+  __C  = None # MySimu Configuration
   __F  = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
   __O  = []   # Order Book
   __Ha = []   # Orders History ask
@@ -25,7 +27,8 @@ class MyTrade:
   __tmp_ts  = 0
   __tmp_age = 0
    
-  def __init__(self, StartBalance = { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 } ):
+  def __init__(self, C, StartBalance = { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 } ):
+    self.__C = C
     self.__StartBalance = dict(StartBalance) # explicit copy of fund
     self.__F = StartBalance
 
@@ -271,12 +274,12 @@ class MyTrade:
            # lambda v:v[2][currency]*Factor+Add,\
             self.__HF)))
  
-  def PlaceOrderAsk(self, price, amount, couple, ts=0, id='', OnlyAlternating=False, OverwriteOrder=False):
-    if OnlyAlternating:
+  def PlaceOrderAsk(self, price, amount, couple, ts=0, id=''):
+    if self.__C.OnlyAlternating:
       if self.GetTypeOfLastFilled(id) == 'ask':
         return False
       if self.HasActiveAsk():
-        if not OverwriteOrder:
+        if not self.__C.OverwriteOrder:
           return False
         else:
           self.CancelOrders('ask')
@@ -288,12 +291,12 @@ class MyTrade:
     #  print("  "+str(o))
 
 
-  def PlaceOrderBid(self, price, amount, couple, ts=0, id='', OnlyAlternating=False, OverwriteOrder=False):
-    if OnlyAlternating:
+  def PlaceOrderBid(self, price, amount, couple, ts=0, id=''):
+    if self.__C.OnlyAlternating:
       if self.GetTypeOfLastFilled(id) == 'bid':
         return False
       if self.HasActiveBid():
-        if not OverwriteOrder:
+        if not self.__C.OverwriteOrder:
           return False
         else:
           self.CancelOrders('bid')

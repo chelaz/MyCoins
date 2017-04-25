@@ -48,7 +48,8 @@ class MyAlgoHelpers:
 
 class MyAlgos:
   
-  
+  __T = None # MyTrade
+   
   __MinMaxL = [] # item: [ts, min, max]
 
 
@@ -59,6 +60,9 @@ class MyAlgos:
   def __init__(self):
     pass
 
+  def SetTrading(self, T):
+    self.__T = T
+
   def GetMinMaxList(self):
     return self.__MinMaxL
 
@@ -66,7 +70,7 @@ class MyAlgos:
   # LastL: last traded values list
   # C:     SimuConf
   def SimuInterBand(self, v, LastL, C):
-    T = C.T
+    T = self.__T
     val = 0.01
     ts = v[0]
 
@@ -109,8 +113,7 @@ class MyAlgos:
       print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
       T.PlaceOrderAsk(price, # C.PlaceBidFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts, \
-                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+                      val, C.couple, id='InterBand', ts=ts)
 
     if v[1] > max+eps:
 #     price = max-maxmin*C.PlaceAskFact
@@ -119,8 +122,7 @@ class MyAlgos:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
       T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts, \
-                      OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+                      val, C.couple, id='InterBand', ts=ts)
 
 
 ###########################################
@@ -130,7 +132,7 @@ class MyAlgos:
   # C:     SimuConf
   def SimuApproachExtr(self, v, LastL, C):
     Placed=False
-    T = C.T
+    T = self.__T
     val = 0.01
     ts = v[0]
     age = 300
@@ -169,8 +171,7 @@ class MyAlgos:
         #price = v[1]*1.01
         price = v[1]
         T.PlaceOrderAsk(price, \
-                        val, C.couple, id='ApproachExtr', ts=ts, \
-                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+                        val, C.couple, id='ApproachExtr', ts=ts)
         Placed=True
         Prv['minprev'] = Prv['min']
         Prv['mincnt']  = 1
@@ -201,8 +202,7 @@ class MyAlgos:
         #price = v[1]*0.99
         price = v[1]
         T.PlaceOrderBid(price, \
-                        val, C.couple, id='ApproachExtr', ts=ts, \
-                        OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+                        val, C.couple, id='ApproachExtr', ts=ts)
         Placed=True
         Prv['maxprev'] = Prv['max']
         Prv['maxcnt']  = 1
@@ -231,7 +231,7 @@ class MyAlgos:
   # C:     SimuConf
   def SimuIntraBand(self, v, LastL, C):
     Placed=False
-    T = C.T
+    T = self.__T
     val = 0.01
     ts = v[0]
     p  = v[1]
@@ -256,31 +256,37 @@ class MyAlgos:
         Placed=True
     return Placed
 
+
+
   def AStopLoss(self, v, LastL, C):
     Placed=False
     val = 0.01
     ts = v[0]
     p  = v[1]
+    T  = self.__T
 
-    LastFilled = C.T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+    LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
 
     # Buy very first:
     if LastFilled == None:
       price = p # *0.99
-      C.T.PlaceOrderAsk(price, val, C.couple, id='ApproachExtr', ts=ts)
+      T.PlaceOrderAsk(price, val, C.couple, id='ApproachExtr', ts=ts)
       return True
   
     #print(str(LastFilled))
 
+    if LastFilled[3] != 'ApproachExtr':
+      return False
+
     if LastFilled[0] == 'ask':
-      if p < LastFilled[2]:
+      if p < LastFilled[2]*1.05:
         price = p #LastFilled[2] *0.99
-        C.T.PlaceOrderBid(price, val, C.couple, id='ApproachExtr', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+        T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
-      if p > LastFilled[2]:
+      if p*1.05 > LastFilled[2]:
         price = p # LastFilled[2] *1.01
-        C.T.PlaceOrderAsk(price, val, C.couple, id='ApproachExtr', ts=ts, OnlyAlternating=C.OnlyAlternating, OverwriteOrder=C.OverwriteOrder)
+        T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     return Placed
 

@@ -1,31 +1,31 @@
 #!/usr/bin/python3
 
 
-from MyTrade import MyTrade
+#from MyTrade import MyTrade
 
 
 ### Simu Config
 class SimuConf:
-  T = None # MyTrade
+  #T = None # MyTrade
   WinSize = 100 
   PlaceBidFact=0.0
   PlaceAskFact=0.0
 #  PlaceBidFact=0.99
 #  PlaceAskFact=1.01
   OnlyAlternating = True
-  OverwriteOrder = False#currently only if OnlyAlternating
+  OverwriteOrder = False #currently only if OnlyAlternating
   SkipIfSameTS = False 
-  MinMaxEpsPerc= 0.5
+  MinMaxEpsPerc= 0.0
 
   __Algo = None
 
   # T: MyTrade (Trading interface)
-  def __init__(self, T, Algos, couple, WinSize=100, MinMaxEpsPerc=None):
+  def __init__(self, Algos, couple, WinSize=100, MinMaxEpsPerc=None):
     self.couple = couple
     self.WinSize = WinSize
     if MinMaxEpsPerc != None:
       self.MinMaxEpsPerc = MinMaxEpsPerc
-    self.T = T
+    #self.T = T
     self.__Algos=Algos
 
   def Print(self):

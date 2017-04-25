@@ -293,6 +293,8 @@ class MyRich:
   # C: SimuConf
   def SimulateTrading(self, T, C):
 
+    self.__A.SetTrading(T)
+
     if self.__DebugTS > 0:
       print("Debug ts: %d" % self.__DebugTS)
 
@@ -655,19 +657,20 @@ class MyRich:
 
   def SimulateTradingAndPlot(self, couple):
     
-    #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
-    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
-#    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
-
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(T, couple=couple, WinSize=2000, \
+    C=SimuConf(couple=couple, WinSize=2000, \
                Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
                )
 #    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
-    #C.OnlyAlternating=False
+#please edit in MySimu:    #C.OnlyAlternating=False
     #C.OverwriteOrder=True 
-    C.MinMaxEpsPerc=0.0
+#    C.MinMaxEpsPerc=0.0
+ 
+#  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
+    T=MyTrade(C, { 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+#    T=MyTrade({ 'btc' : 1.0, 'dsh' : 0.0, 'eth' : 1.0 }) 
+
     self.C = C # save for external access
 
     self.SimulateTrading(T, C)
