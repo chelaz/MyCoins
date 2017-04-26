@@ -51,7 +51,7 @@ class MyAlgos:
   __T = None # MyTrade
    
   __MinMaxL = [] # item: [ts, min, max]
-
+  __TimePerWinSize = []
 
   # Approach Algo:
   __Appr_Prev = {'mints':None, 'maxts':None} 
@@ -65,6 +65,10 @@ class MyAlgos:
 
   def GetMinMaxList(self):
     return self.__MinMaxL
+
+  def GetTimePerWinSize(self):
+    return self.__TimePerWinSize
+
 
   # vc:    current price
   # LastL: last traded values list
@@ -81,6 +85,7 @@ class MyAlgos:
 #    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
+    sum=MMList[0][1]['amount']
 
     Test=False
     if Test:
@@ -95,7 +100,8 @@ class MyAlgos:
               % (ts, v[1], min))
 
 
-    self.__MinMaxL.append([ts, min, max])
+    self.__MinMaxL.append([ts, min, max, sum])
+    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
 
     maxmin = max-min
 
@@ -154,8 +160,10 @@ class MyAlgos:
     MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
+    sum=MMList[0][1]['amount']
+    self.__MinMaxL.append([ts, min, max, sum])
+    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
 
-    self.__MinMaxL.append([ts, min, max])
 
     if Prv['mints'] == None:
       Prv['mints'] = ts
@@ -295,13 +303,13 @@ class MyAlgos:
       return False
 
     if LastFilled[0] == 'ask':
-      if p < min: #LastFilled[2]*1.05:
+      if p < LastFilled[2]:
         price = p #min*0.99 #LastFilled[2] *0.99
         T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
       #print("lastfilled bid. p %f max %f" % (p, max))
-      if p > max: #LastFilled[2]:
+      if p > LastFilled[2]:
         price = p #max*1.01 #LastFilled[2] *1.01
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))

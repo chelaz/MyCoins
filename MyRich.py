@@ -407,10 +407,14 @@ class MyRich:
     MML = self.__A.GetMinMaxList()
     MinPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[1], MML)))
     MaxPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[2], MML)))
+    SumPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[3], MML)))
 
-    return MinPlot, MaxPlot
+    return MinPlot, MaxPlot, SumPlot
    
-  
+  def GetTimePerWSPlot(self):
+    TPWSL = self.__A.GetTimePerWinSize()
+    return (list(map(lambda v:v[0], TPWSL)), list(map(lambda v:v[1], TPWSL)))
+
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, WinSize, Percentage=False):
     L=self.BuildMinMaxList2(self.GetPriceList(couple), WinSize)
@@ -688,6 +692,8 @@ class MyRich:
     dict['balance'] = T.GetPlotHistBalance("btc")
     dict['askEv']   = T.GetPlotEventAsk()
     dict['bidEv']   = T.GetPlotEventBid()
+    dict['timePerWS'] = self.GetTimePerWSPlot()
+
     return dict
 
   def SimulateTradingMode(self, weeks=[], year=0):
