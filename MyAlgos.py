@@ -135,7 +135,7 @@ class MyAlgos:
     T = self.__T
     val = 0.01
     ts = v[0]
-    age = 300
+    age = 50
    # age = 3600
     #age = 8000
 
@@ -174,7 +174,8 @@ class MyAlgos:
     if Prv['min'] == min:
       Prv['mincnt'] += 1
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
-      if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
+      #if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
+      if ts-Prv['mints'] > age and Prv['minprev'] > min:
         print("Age %d cnt %d (ask)" % (ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = v[1]
@@ -203,7 +204,8 @@ class MyAlgos:
         print("==", end='')
       Prv['maxcnt'] += 1
  #     if Prv['maxcnt'] > age:
-      if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
+      #if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
+      if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
         print("Age %d cnt %d (Bid)" % (ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
           print("prev < max", end='')
@@ -294,13 +296,13 @@ class MyAlgos:
 
     if LastFilled[0] == 'ask':
       if p < min: #LastFilled[2]*1.05:
-        price = min*1.01 #LastFilled[2] *0.99
+        price = p #min*0.99 #LastFilled[2] *0.99
         T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
       #print("lastfilled bid. p %f max %f" % (p, max))
       if p > max: #LastFilled[2]:
-        price = max*0.99 #LastFilled[2] *1.01
+        price = p #max*1.01 #LastFilled[2] *1.01
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
         Placed=True

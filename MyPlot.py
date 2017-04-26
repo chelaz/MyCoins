@@ -101,7 +101,7 @@ couple=couple_db
 #couple=couple_ee
 #
 if mode == "simulate":
-  AskBidPlots=R.SimulateTradingAndPlot(couple)
+  SimPlots=R.SimulateTradingAndPlot(couple)
   R.PrintElapsed("Simulate Trading")
  
   #if len(AskBidPlots[0][0]) == 0:
@@ -135,28 +135,30 @@ DoPlot(R, couple, 'b-', Percentage=False)
 
 if mode == "simulate":
   #linesS=plt.plot(*AskBidPlots[0], 'ro', *AskBidPlots[1],'go', *AskBidPlots[2], 'b-')
-  linesSA,=plt.plot(*AskBidPlots[0], 'rv', label="Ask", markersize=7)
-  linesSB,=plt.plot(*AskBidPlots[1], 'g^', label="Bid", markersize=7)
-  plt.legend([linesSA,linesSB], ['Ask v', 'Bid ^'])
+  linesSA,=plt.plot(*SimPlots['askAppr'], 'rv', label="Ask", markersize=7)
+  linesSB,=plt.plot(*SimPlots['bidAppr'], 'g^', label="Bid", markersize=7)
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
-
-  PrintLabels = True
+  linesS2A,=plt.plot(*SimPlots['askStop'], 'bv', label="Ask", markersize=7)
+  linesS2B,=plt.plot(*SimPlots['bidStop'], 'k^', label="Bid", markersize=7)
+  plt.legend([linesSA,linesSB, linesS2A, linesS2B], ['Ask v', 'Bid ^', 'Ask v', 'Bid ^'])
+ 
+  PrintLabels = False
   if PrintLabels:
     # print labels for bid
-    for i in range(len(AskBidPlots[1][0])):
-      ts=AskBidPlots[1][0][i]
-      v=AskBidPlots[1][1][i]
+    for i in range(len(SimPlots['bidAppr'][0])):
+      ts=SimPlots['bidAppr'][0][i]
+      v =SimPlots['bidAppr'][1][i]
       plt.annotate(str(ts), xy=(ts, v), xytext=(ts, v*0.9), arrowprops=dict(arrowstyle='->'), ) #arrowprops=dict(facecolor='black', shrink=1.0),)
 
-  plt.plot(*AskBidPlots[3], 'ro', markersize=15, fillstyle='none')
-  plt.plot(*AskBidPlots[4], 'go', markersize=15, fillstyle='none')
+  plt.plot(*SimPlots['askEv'], 'ro', markersize=15, fillstyle='none')
+  plt.plot(*SimPlots['bidEv'], 'go', markersize=15, fillstyle='none')
 
 ax=ConfigPlot(couple)
 
 if mode == "simulate":
   ax2 = ax.twinx()
   #plt.subplot(2,1,2)
-  linesS=ax2.plot(*AskBidPlots[2], 'b-')
+  linesS=ax2.plot(*SimPlots['balance'], 'b-')
   ConfigPlot(couple, ax2)
 
 

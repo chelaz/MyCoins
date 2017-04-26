@@ -658,7 +658,7 @@ class MyRich:
   def SimulateTradingAndPlot(self, couple):
     
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(couple=couple, WinSize=2000, \
+    C=SimuConf(couple=couple, WinSize=1000, \
                Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
                )
 #    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
@@ -679,13 +679,16 @@ class MyRich:
 #    T.PrintEventAsk()  
 #    T.PrintHistBid()
 #    T.PrintEventBid()  
-  
-    PLa=T.GetPlotHistAsk()
-    Plb=T.GetPlotHistBid()
-    Plf=T.GetPlotHistBalance("btc")
-    PEa=T.GetPlotEventAsk()
-    PEb=T.GetPlotEventBid()
-    return (PLa, Plb, Plf, PEa, PEb)
+
+    dict = {}
+    dict['askAppr'] = T.GetPlotHistAsk('ApproachExtr')
+    dict['bidAppr'] = T.GetPlotHistBid('ApproachExtr')
+    dict['askStop'] = T.GetPlotHistAsk('StopLoss')
+    dict['bidStop'] = T.GetPlotHistBid('StopLoss')
+    dict['balance'] = T.GetPlotHistBalance("btc")
+    dict['askEv']   = T.GetPlotEventAsk()
+    dict['bidEv']   = T.GetPlotEventBid()
+    return dict
 
   def SimulateTradingMode(self, weeks=[], year=0):
     if not self.LoadWeeks(weeks, year):

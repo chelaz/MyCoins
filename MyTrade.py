@@ -9,7 +9,7 @@ class MyTrade:
   __C  = None # MySimu Configuration
   __F  = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
   __O  = []   # Order Book
-  __Ha = []   # Orders History ask
+  __Ha = []   # Orders History ask: [ts, price, id]]
   __Hb = []   # Orders History bid
   __HF = []   # [[ ts, price, f ] ,...] # f is copy of __F
 
@@ -240,14 +240,21 @@ class MyTrade:
     print("PrintHistBid")
     for f in self.__Hb:
       print("  "+str(f))
-   
-
-  def GetPlotHistAsk(self):
-    return (list(map(lambda v:v[0], self.__Ha)), list(map(lambda v:v[1],self.__Ha)))
+  
+  def __GetPlotHist(self, List, id):
+    if id != '':
+      FilteredList=list(filter(lambda v:v[2] == id, List))
+    else:
+      FilteredList=List
+    return (list(map(lambda v:v[0], FilteredList)), list(map(lambda v:v[1], FilteredList)))
  
-  def GetPlotHistBid(self):
-    return (list(map(lambda v:v[0], self.__Hb)), list(map(lambda v:v[1],self.__Hb)))
 
+  def GetPlotHistAsk(self, id=''):
+    return self.__GetPlotHist(self.__Ha, id)
+ 
+  def GetPlotHistBid(self, id=''):
+    return self.__GetPlotHist(self.__Hb, id)
+ 
   def GetPlotEventAsk(self):
     return (list(map(lambda v:v[0], self.__Ea)), list(map(lambda v:v[1],self.__Ea)))
  
