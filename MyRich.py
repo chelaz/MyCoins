@@ -649,7 +649,7 @@ class MyRich:
     self.LoadList()
 
     self.RecPublicTrades("dsh_btc", limit=500)
-    self.RecPublicTrades("dsh_eur")
+    self.RecPublicTrades("dsh_eur", limit=1000)
     self.RecPublicTrades("dsh_usd", limit=500)
     self.RecPublicTrades("btc_usd")
     self.RecPublicTrades("btc_eur")
