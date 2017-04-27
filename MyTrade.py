@@ -56,15 +56,15 @@ class MyTrade:
   def CanceledBid(self):
     return self.__HbCanceled
 
-  def HasActiveBid(self):
+  def HasActiveBid(self, id=''):
     for o in self.__O:
-      if o['type'] == 'bid':
+      if o['type'] == 'bid' and o['id'] == id:
         return True
     return False
  
-  def HasActiveAsk(self):
+  def HasActiveAsk(self, id=''):
     for o in self.__O:
-      if o['type'] == 'ask':
+      if o['type'] == 'ask' and o['id'] == id:
         return True
     return False
 
@@ -289,7 +289,7 @@ class MyTrade:
         if LF[0] == 'ask':
           print("(a)", end='')
           return False
-      if self.HasActiveAsk():
+      if self.HasActiveAsk(id):
         if not self.__C.OverwriteOrder:
           print("(o)", end='')
           return False
@@ -310,7 +310,7 @@ class MyTrade:
       if LF != None:
         if LF[0] == 'bid':
           return False
-      if self.HasActiveBid():
+      if self.HasActiveBid(id):
         if not self.__C.OverwriteOrder:
           return False
         else:

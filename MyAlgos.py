@@ -1,7 +1,48 @@
 ### Trading Algos
 
+import datetime
 
-#import MyRich
+class MyTime:
+  __datetime = None
+
+  # timestamp == 0 means now
+  def __init__(self, timestamp=0):
+    if timestamp == 0:
+      self.__datetime=datetime.datetime.now()
+    else:
+      self.__datetime=datetime.datetime.fromtimestamp(timestamp)
+  
+  def Timestamp(self):
+    return int(self.__datetime.timestamp())
+
+  def Str(self):
+    """ returns string in format by example: 2017-12-31 23:59:00 """
+    return self.__datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+  def StrDayTime(self):
+    """ returns string in format by example: 31.-23:59:00 """
+    return self.__datetime.strftime('%d./%H:%M:%S')
+
+  def StrDay(self):
+    """ returns string in format by example: 2017-12-31 """
+    return self.__datetime.strftime('%Y-%m-%d')
+
+  def StrWeek(self):
+    """ returns string in format by example: 2017-51 """
+    return self.__datetime.strftime('%Y-%W')
+
+  def Week(self):
+    """ returns integer of week number """
+    return int(self.__datetime.strftime('%W'))
+
+  def Year(self):
+    """ returns integer of year """
+    return int(self.__datetime.strftime('%Y'))
+
+  def PrintDiff(self, end='\n'):
+    diff=datetime.datetime.now()-self.__datetime
+    print(str(diff), end=end)
+
 
 
 class MyAlgoHelpers:
@@ -44,7 +85,10 @@ class MyAlgoHelpers:
   
     return MMList
  
-
+  #items in MinMaxL: [ts, min, max]
+  def GetMinMaxbyTS(MinMaxL, ts):
+    TSL = list(filter(lambda v: v[0] == ts, MinMaxL))
+    return TSL[0]
 
 class MyAlgos:
   
@@ -184,7 +228,7 @@ class MyAlgos:
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
       #if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
       if ts-Prv['mints'] > age and Prv['minprev'] > min:
-        print("Age %d cnt %d (ask)" % (ts-Prv['mints'], Prv['mincnt']))
+        print("[%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = v[1]
         T.PlaceOrderAsk(price, \
@@ -214,7 +258,7 @@ class MyAlgos:
  #     if Prv['maxcnt'] > age:
       #if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
       if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
-        print("Age %d cnt %d (Bid)" % (ts-Prv['maxts'], Prv['maxcnt']))
+        print("[%s] Age %d cnt %d (bid appr)" % (MyTime(ts).StrDayTime(), ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
           print("prev < max", end='')
         #price = v[1]*0.99
@@ -290,6 +334,7 @@ class MyAlgos:
 
 
     LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+    MinMaxOfLastFilled = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilled[1])
 
     # Buy very first:
     if LastFilled == None:
@@ -303,16 +348,16 @@ class MyAlgos:
       return False
 
     if LastFilled[0] == 'ask':
-      if p < LastFilled[2]:
-        price = p #min*0.99 #LastFilled[2] *0.99
+      if p < MinMaxOfLastFilled[1]: # LastFilled[2]:
+        price = MinMaxOfLastFilled[1] #min*0.99 #LastFilled[2] *0.99
         T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
       #print("lastfilled bid. p %f max %f" % (p, max))
-      if p > LastFilled[2]:
-        price = p #max*1.01 #LastFilled[2] *1.01
+      if p > MinMaxOfLastFilled[2]: # LastFilled[2]:
+        price = MinMaxOfLastFilled[2] #max*1.01 #LastFilled[2] *1.01
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
-        print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
+        #print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
         Placed=True
     return Placed
 

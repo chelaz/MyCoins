@@ -27,44 +27,7 @@ from Keys import Keys
 from MyTrade import MyTrade
 from MySimu import SimuConf
 from MyAlgos import MyAlgos
-
-class MyTime:
-  __datetime = None
-
-  # timestamp == 0 means now
-  def __init__(self, timestamp=0):
-    if timestamp == 0:
-      self.__datetime=datetime.datetime.now()
-    else:
-      self.__datetime=datetime.datetime.fromtimestamp(timestamp)
-  
-  def Timestamp(self):
-    return int(self.__datetime.timestamp())
-
-  def Str(self):
-    """ returns string in format by example: 2017-12-31 23:59:00 """
-    return self.__datetime.strftime('%Y-%m-%d %H:%M:%S')
-
-  def StrDay(self):
-    """ returns string in format by example: 2017-12-31 """
-    return self.__datetime.strftime('%Y-%m-%d')
-
-  def StrWeek(self):
-    """ returns string in format by example: 2017-51 """
-    return self.__datetime.strftime('%Y-%W')
-
-  def Week(self):
-    """ returns integer of week number """
-    return int(self.__datetime.strftime('%W'))
-
-  def Year(self):
-    """ returns integer of year """
-    return int(self.__datetime.strftime('%Y'))
-
-  def PrintDiff(self, end='\n'):
-    diff=datetime.datetime.now()-self.__datetime
-    print(str(diff), end=end)
-
+from MyAlgos import MyTime
 
 
 class MyRich:

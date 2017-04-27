@@ -158,8 +158,8 @@ ax=ConfigPlot(couple)
 if mode == "simulate":
   ax2 = ax.twinx()
   #plt.subplot(2,1,2)
-  #linesS=ax2.plot(*SimPlots['balance'], 'b-')
-  linesS=ax2.plot(*SimPlots['timePerWS'], 'r-')
+  linesS=ax2.plot(*SimPlots['balance'], 'b-')
+  #linesS=ax2.plot(*SimPlots['timePerWS'], 'r-')
   #linesS=ax2.plot(*MMPlot2[2], 'g-')
   ConfigPlot(couple, ax2)
 
