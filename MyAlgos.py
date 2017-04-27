@@ -350,12 +350,15 @@ class MyAlgos:
     if LastFilled[0] == 'ask':
       if p < MinMaxOfLastFilled[1]: # LastFilled[2]:
         price = MinMaxOfLastFilled[1] #min*0.99 #LastFilled[2] *0.99
+        print("[%s] (bid sl)" % (MyTime(ts).StrDayTime()))
+                 
         T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
       #print("lastfilled bid. p %f max %f" % (p, max))
       if p > MinMaxOfLastFilled[2]: # LastFilled[2]:
         price = MinMaxOfLastFilled[2] #max*1.01 #LastFilled[2] *1.01
+        print("[%s] (ask sl)" % (MyTime(ts).StrDayTime()))
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         #print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
         Placed=True

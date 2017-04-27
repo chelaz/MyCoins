@@ -255,11 +255,13 @@ class MyTrade:
   def GetPlotHistBid(self, id=''):
     return self.__GetPlotHist(self.__Hb, id)
  
-  def GetPlotEventAsk(self):
-    return (list(map(lambda v:v[0], self.__Ea)), list(map(lambda v:v[1],self.__Ea)))
+  def GetPlotEventAsk(self, id=''):
+    return self.__GetPlotHist(self.__Ea, id)
+    #return (list(map(lambda v:v[0], self.__Ea)), list(map(lambda v:v[1],self.__Ea)))
  
-  def GetPlotEventBid(self):
-    return (list(map(lambda v:v[0], self.__Eb)), list(map(lambda v:v[1],self.__Eb)))
+  def GetPlotEventBid(self, id=''):
+    return self.__GetPlotHist(self.__Eb, id)
+    #return (list(map(lambda v:v[0], self.__Eb)), list(map(lambda v:v[1],self.__Eb)))
 
 
   # eg: amount=0.24, price=0.08, base=1.0, currency=dsh

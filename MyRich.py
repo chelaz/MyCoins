@@ -653,8 +653,10 @@ class MyRich:
     dict['askStop'] = T.GetPlotHistAsk('StopLoss')
     dict['bidStop'] = T.GetPlotHistBid('StopLoss')
     dict['balance'] = T.GetPlotHistBalance("btc")
-    dict['askEv']   = T.GetPlotEventAsk()
-    dict['bidEv']   = T.GetPlotEventBid()
+    dict['askApEv'] = T.GetPlotEventAsk('ApproachExtr')
+    dict['bidApEv'] = T.GetPlotEventBid('ApproachExtr')
+    dict['askSLEv'] = T.GetPlotEventAsk('StopLoss')
+    dict['bidSLEv'] = T.GetPlotEventBid('StopLoss')
     dict['timePerWS'] = self.GetTimePerWSPlot()
 
     return dict

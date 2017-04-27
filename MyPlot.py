@@ -150,8 +150,11 @@ if mode == "simulate":
       v =SimPlots['bidAppr'][1][i]
       plt.annotate(str(ts), xy=(ts, v), xytext=(ts, v*0.9), arrowprops=dict(arrowstyle='->'), ) #arrowprops=dict(facecolor='black', shrink=1.0),)
 
-  plt.plot(*SimPlots['askEv'], 'ro', markersize=15, fillstyle='none')
-  plt.plot(*SimPlots['bidEv'], 'go', markersize=15, fillstyle='none')
+  plt.plot(*SimPlots['askApEv'], 'ro', markersize=15, fillstyle='none')
+  plt.plot(*SimPlots['bidApEv'], 'go', markersize=15, fillstyle='none')
+  plt.plot(*SimPlots['askSLEv'], 'bo', markersize=10, fillstyle='none')
+  plt.plot(*SimPlots['bidSLEv'], 'ko', markersize=10, fillstyle='none')
+
 
 ax=ConfigPlot(couple)
 
