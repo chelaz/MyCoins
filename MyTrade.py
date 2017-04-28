@@ -8,7 +8,7 @@ from MySimu import SimuConf
 class MyTrade:
   __C  = None # MySimu Configuration
   __F  = None # (Funds) Balance { 'btc' : 0.0, 'dsh' : 0.0, 'eth' : 0.0 }
-  __O  = []   # Order Book
+  __O  = []   # Order Book      { 'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id}
   __Ha = []   # Orders History ask: [ts, price, id]]
   __Hb = []   # Orders History bid
   __HF = []   # [[ ts, price, f ] ,...] # f is copy of __F
@@ -79,17 +79,21 @@ class MyTrade:
       if len(self.__Hb) == 0:
         return None
       else:
-        return ('bid', *self.__Hb[-1])
+        #return ('bid', *self.__Hb[-1])
+        return ('bid', self.__Hb[-1][0], self.__Hb[-1][1], self.__Hb[-1][2])
     else:
       if len(self.__Hb) == 0:
-        return ('ask', *self.__Ha[-1])
+       #return ('ask', *self.__Ha[-1])
+       return ('ask', self.__Ha[-1][0], self.__Ha[-1][1], self.__Ha[-1][2])
 
     # check younger timestamp
     if self.__Ha[-1][0] > self.__Hb[-1][0]:
       # last filled was 'ask'
-      return ('ask', *self.__Ha[-1])
+      # return ('ask', *self.__Ha[-1])
+      return ('ask', self.__Ha[-1][0], self.__Ha[-1][1], self.__Ha[-1][2])
     else:
-      return ('bid', *self.__Hb[-1])
+      # return ('bid', *self.__Hb[-1])
+      return ('bid', self.__Hb[-1][0], self.__Hb[-1][1], self.__Hb[-1][2])
  
   ############ Helpers for FillOrders
   def __CheckOutdated(self, o):
@@ -123,24 +127,34 @@ class MyTrade:
         Ret=False # remove from list
     return Ret
 
+  #obsolete
   def __CheckTypeAsk(self, o):
     return o['type'] == 'ask'
-
+  #obsolete
   def __CheckTypeBid(self, o):
     return o['type'] == 'bid'
 
-  def CancelOrders(self, type):
-    if type == 'ask':    
-      OrdersRemoved=list(filter(self.__CheckTypeBid, self.__O))
+  def __CheckOrderType(self, o, type):
+    return o['type'] == type
+
+  def __CheckOrderID(self, o, id):
+    if id == '':
+      return True
+    else:
+      return o['id'] == id
+
+  def CancelOrders(self, type, id):
+    if type == 'ask':
+      OrdersRemoved=list(filter(lambda o: (not self.__CheckOrderID(o, id)) or self.__CheckOrderType(o, 'bid'), self.__O))
       self.__HaCanceled += len(self.__O)-len(OrdersRemoved)
     else:
-      OrdersRemoved=list(filter(self.__CheckTypeAsk, self.__O))
+      OrdersRemoved=list(filter(lambda o: (not self.__CheckOrderID(o, id)) or self.__CheckOrderType(o, 'ask'), self.__O))
       self.__HbCanceled += len(self.__O)-len(OrdersRemoved)
  
     Debug=True
     if Debug:
       print("OrdersRemoved: %d of type %s. Remaining Order Book:" % (len(self.__O)-len(OrdersRemoved), type))
-      for o in self.__O:
+      for o in OrdersRemoved:
         print("  "+str(o))
 
     self.__O = OrdersRemoved    
@@ -296,7 +310,7 @@ class MyTrade:
           print("(o)", end='')
           return False
         else:
-          self.CancelOrders('ask')
+          self.CancelOrders('ask', id)
     self.__O.append({'type':'ask', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
     self.__Ea.append([ts, price, id])
     return True 
@@ -316,7 +330,7 @@ class MyTrade:
         if not self.__C.OverwriteOrder:
           return False
         else:
-          self.CancelOrders('bid')
+          self.CancelOrders('bid', id)
     self.__O.append({'type':'bid', 'price':price, 'amount':amount, 'couple':couple, 'ts':ts, 'id':id})
     self.__Eb.append([ts, price, id])
     return True 

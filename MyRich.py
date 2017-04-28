@@ -885,13 +885,15 @@ class MyRich:
     #L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
   
      
-  
+    C=SimuConf(couple='dsh_btc', WinSize=100, \
+               Algos=[])
+#
     
     #self.TestFillTrades()
     #return
     
   #  T=MyTrade({ 'btc' : 0.2, 'dsh' : 0.0, 'eth' : 0.0 }) 
-    T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
+    T=MyTrade(C, { 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
   
     T.PrintBalance()
 
@@ -902,13 +904,16 @@ class MyRich:
 #    T.PlaceOrderAsk( 0.04,    0.24, "dsh_btc", ts=14)
 #    #T.PlaceOrderAsk( 0.03455, 0.5/0.03455,  "eth_btc", ts=15)
 #
-#    T.PlaceOrderAsk( 0.09,    0.4, "dsh_btc", ts=12)
- 
-    #T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12)
- 
-    T.FillOrders(0.07, ts=15, age=10)
+    T.PlaceOrderAsk( 0.11,    0.4, "dsh_btc", ts=12, id='testAsk')
+    T.PlaceOrderAsk( 0.12,    0.4, "dsh_btc", ts=12, id='testAsk2')
 
-    T.PlaceOrderBid( 0.05, 0.01, "dsh_btc", ts=12)
+    T.CancelOrders('ask', id='testAsk')
+ 
+    T.PlaceOrderBid( 0.06,    0.3, "dsh_btc", ts=12, id='test1')
+ 
+    T.FillOrders(0.05, ts=15, age=10)
+
+    T.PlaceOrderBid( 0.05, 0.01, "dsh_btc", ts=12, id='test1')
  
     T.FillOrders(0.1, ts=15, age=10)
 
