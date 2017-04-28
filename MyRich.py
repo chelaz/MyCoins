@@ -625,8 +625,9 @@ class MyRich:
   def SimulateTradingAndPlot(self, couple):
     
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
-    C=SimuConf(couple=couple, WinSize=1000, \
-               Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
+    C=SimuConf(couple=couple, WinSize=100, \
+               Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
+               #Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
                )
 #    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
@@ -650,6 +651,8 @@ class MyRich:
     dict = {}
     dict['askAppr'] = T.GetPlotHistAsk('ApproachExtr')
     dict['bidAppr'] = T.GetPlotHistBid('ApproachExtr')
+    dict['askIntr'] = T.GetPlotHistAsk('InterBand')
+    dict['bidIntr'] = T.GetPlotHistBid('InterBand')
     dict['askStop'] = T.GetPlotHistAsk('StopLoss')
     dict['bidStop'] = T.GetPlotHistBid('StopLoss')
     dict['balance'] = T.GetPlotHistBalance("btc")
