@@ -317,6 +317,7 @@ class MyRich:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
 
       T.FillOrders(v[1], ts=ts, age=C.WinSize*10, Debug=Debug)
+      #T.FillOrders(v[1], ts=ts, age=1000)
 
       #LastL = L[i-C.WinSize-1:i]
       LastL = L[:i]

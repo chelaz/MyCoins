@@ -177,12 +177,12 @@ class MyTrade:
 
 
     #print("last filled: "+str(self.__TypeOfLastFilled))
-    for id in self.__TypeOfLastFilled:
-      v = self.__TypeOfLastFilled[id]
+    #for id in self.__TypeOfLastFilled:
+    #  v = self.__TypeOfLastFilled[id]
       #print("id: "+str(v))
-      if ts-v[1] > AlternatingAge:
-        v[0] = ''
-        v[1] = 0
+    #  if ts-v[1] > AlternatingAge:
+    #    v[0] = ''
+    #    v[1] = 0
     #print("last filled after deletion: "+str(self.__TypeOfLastFilled))
          
     self.__tmp_ts    = ts

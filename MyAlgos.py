@@ -188,6 +188,7 @@ class MyAlgos:
     T = self.__T
     val = C.AltTradingVal
     ts = v[0]
+    p  = v[1]
     age = 1000
     #age = 3600
     #age = 8000
@@ -219,7 +220,7 @@ class MyAlgos:
       if ts-Prv['mints'] > age and Prv['minprev'] > min:
         print(" [%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
-        price = v[1]
+        price = p
         T.PlaceOrderAsk(price, \
                         val, C.couple, id='ApproachExtr', ts=ts)
         Placed=True
