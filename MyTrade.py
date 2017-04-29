@@ -4,6 +4,7 @@ import datetime
 import sys
 
 from MySimu import SimuConf
+from MyAlgos import MyTime
 
 class MyTrade:
   __C  = None # MySimu Configuration
@@ -303,11 +304,11 @@ class MyTrade:
       LF=self.GetLastFilled()
       if LF != None:
         if LF[0] == 'ask':
-          print("(a)", end='')
+          #print("(a)", end='')
           return False
       if self.HasActiveAsk(id):
         if not self.__C.OverwriteOrder:
-          print("(o)", end='')
+          #print("(o)", end='')
           return False
         else:
           self.CancelOrders('ask', id)
@@ -355,8 +356,8 @@ class MyTrade:
 
     self.__TypeOfLastFilled[id] = [ 'ask', ts ]
 
-    #print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s" % (ts, sell_price, cur_sell, amount, cur_ask, price, cur_sell, cur_ask))
-    print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s id: %s" % (ts, amount, cur_ask, sell_price, cur_sell, price, cur_sell, cur_ask, id))
+    print(" [%s](%d) Bght(ask) %f %s for %f %s rate %f %s/%s id: %s" % \
+         (MyTime(ts).StrDayTime(), ts, amount, cur_ask, sell_price, cur_sell, price, cur_sell, cur_ask, id))
 
 
   def FillOrderBid(self, price, amount, couple, id='', ts=0):
@@ -375,8 +376,8 @@ class MyTrade:
 
     self.__TypeOfLastFilled[id] = [ 'bid', ts ]
 
- #  print("  [%d] Bought %f %s for %f %s at exchange rate %f %s/%s" % (ts, buy_price, cur_buy, amount, cur_bid, price, cur_buy, cur_bid))
-    print("  [%d] Sold   %f %s for %f %s at exchange rate %f %s/%s id: %s" % (ts, amount, cur_bid, buy_price, cur_buy, price, cur_buy, cur_bid, id))
+    print(" [%s](%d) Sold(bid) %f %s for %f %s rate %f %s/%s id: %s" % \
+         (MyTime(ts).StrDayTime(), ts, amount, cur_bid, buy_price, cur_buy, price, cur_buy, cur_bid, id))
 
   def SellAll(self, price, couple):
     cur=couple.split('_')

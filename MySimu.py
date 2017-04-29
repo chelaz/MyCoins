@@ -16,17 +16,19 @@ class SimuConf:
   OverwriteOrder = False #currently only if OnlyAlternating
   SkipIfSameTS = False 
   MinMaxEpsPerc= 0.0
+  AltTradingVal=0.01
 
-  __Algo = None
+  #__Algo = None
 
   # T: MyTrade (Trading interface)
-  def __init__(self, Algos, couple, WinSize=100, MinMaxEpsPerc=None):
+  def __init__(self, couple, Algos, PrepareFct=None, WinSize=100, MinMaxEpsPerc=None):
     self.couple = couple
     self.WinSize = WinSize
     if MinMaxEpsPerc != None:
       self.MinMaxEpsPerc = MinMaxEpsPerc
     #self.T = T
     self.__Algos=Algos
+    self.__PrepareFct=PrepareFct
 
   def Print(self):
     print("Configuration: \n\t"\
@@ -46,6 +48,8 @@ class SimuConf:
           str(self.SkipIfSameTS)))
 
   def Apply(self, vc, LastL):
+    if self.__PrepareFct != None:
+      self.__PrepareFct(vc, LastL, self)
     for a in self.__Algos:
       if a(vc, LastL, self):
         return True

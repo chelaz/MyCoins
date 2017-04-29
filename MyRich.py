@@ -261,7 +261,7 @@ class MyRich:
     if self.__DebugTS > 0:
       print("Debug ts: %d" % self.__DebugTS)
 
-    val=0.01
+    #val=0.01
 
     Debug=False
 
@@ -281,7 +281,15 @@ class MyRich:
     #cnt_bid=0
     #cnt_ask=0
 
+    if C.OnlyAlternating:
+      # Buy very first:
+      v  = L[0]
+      ts=v[0]
+      price = v[1] # *0.99
+      T.PlaceOrderAsk(price, C.AltTradingVal, C.couple, id='first', ts=ts)
+
     ts_prev=0
+    perc_prev=0
     for i in range(len(L)):
       v  = L[i]
       #v is last traded value
@@ -298,6 +306,12 @@ class MyRich:
       if i <= C.WinSize:
         ts_prev = ts
         continue
+
+      perc=round(i/len(L)*100, 0)
+      if perc % 10 == 0:
+        if perc_prev != perc:
+          print("%2d%% [%s](%d)" % (perc, MyTime(ts).StrDayTime(), ts))
+          perc_prev = perc
 
       if Debug:
         print("{%d} overall filled orders Ask=%d Bid=%d. Current orderbook: %d" % (ts, T.LenOrderHistAsk(), T.LenOrderHistBid(), T.LenOrderBook()))
@@ -626,8 +640,10 @@ class MyRich:
     
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
-               Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
-               #Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
+               PrepareFct=self.__A.ACalcMinMax, \
+               #Algos=[self.__A.AStartBuy] \
+               #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
+               Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
                )
 #    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)

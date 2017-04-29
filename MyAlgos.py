@@ -90,11 +90,15 @@ class MyAlgoHelpers:
     TSL = list(filter(lambda v: v[0] == ts, MinMaxL))
     return TSL[0]
 
+
+
+
 class MyAlgos:
   
   __T = None # MyTrade
    
   __MinMaxL = [] # item: [ts, min, max]
+  __CurMinMaxSum = None
   __TimePerWinSize = []
 
   # Approach Algo:
@@ -110,47 +114,40 @@ class MyAlgos:
   def GetMinMaxList(self):
     return self.__MinMaxL
 
+  def GetCurMinMaxSum(self):
+    return self.__CurMinMaxSum
+
   def GetTimePerWinSize(self):
     return self.__TimePerWinSize
 
+  ############
+  # PrepareFct
+  # vc:    current price
+  # LastL: last traded values list
+  # C:     SimuConf
+  def ACalcMinMax(self, v, LastL, C):
+    ts=v[0]
+    L_LastWZ = LastL[-C.WinSize-1:]
+    MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+    min=MMList[0][1]['min']
+    max=MMList[0][1]['max']
+    sum=MMList[0][1]['amount']
+    self.__CurMinMaxSum = (min, max, sum)
+    self.__MinMaxL.append([ts, min, max, sum])
+    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
 
+
+  ############
+  # Algos
   # vc:    current price
   # LastL: last traded values list
   # C:     SimuConf
   def SimuInterBand(self, v, LastL, C):
     Placed=False
     T = self.__T
-    val = 0.01
     ts = v[0]
 
-    L_LastWZ = LastL[-C.WinSize-1:]
-
-    #print("Len of LastL: old %d new: %d\n" % (len(LastL[-C.WinSize-1:]), len(LastL)))
-    MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
-#    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
-    min=MMList[0][1]['min']
-    max=MMList[0][1]['max']
-    sum=MMList[0][1]['amount']
-    self.__MinMaxL.append([ts, min, max, sum])
-    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
-
-
-    Test=False
-    if Test:
-      if v[1] > max:
-        print("[%d] --------------------------===============> Error: %f > max= %f\n" \
-              % (ts, v[1], max))
-        __R.BuildMinMaxList2(L_LastWZ, C.WinSize, Debug=True)
-        exit(0)
-
-      if v[1] < min:
-        print("[%d] --------------------------===============> Error: %f < min= %f\n" \
-              % (ts, v[1], min))
-
-
-#    self.__MinMaxL.append([ts, min, max, sum])
-#    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
-
+    (min, max, sum) = self.GetCurMinMaxSum()
     maxmin = max-min
 
     #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
@@ -167,7 +164,7 @@ class MyAlgos:
 #      print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
       T.PlaceOrderAsk(price, # C.PlaceBidFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts)
+                      C.AltTradingVal, C.couple, id='InterBand', ts=ts)
       Placed=True
 
     if v[1] > max+eps:
@@ -177,7 +174,7 @@ class MyAlgos:
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
       T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
-                      val, C.couple, id='InterBand', ts=ts)
+                      C.AltTradingVal, C.couple, id='InterBand', ts=ts)
       Placed=True
     return Placed
 
@@ -189,31 +186,17 @@ class MyAlgos:
   def SimuApproachExtr(self, v, LastL, C):
     Placed=False
     T = self.__T
-    val = 0.01
+    val = C.AltTradingVal
     ts = v[0]
     age = 1000
-   # age = 3600
+    #age = 3600
     #age = 8000
 
     LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
 
-    # Buy very first:
-    if LastFilled == None:
-      price = v[1] # *0.99
-      T.PlaceOrderAsk(price, val, C.couple, id='first', ts=ts)
-      return True
+    (min, max, sum) = self.GetCurMinMaxSum()
  
     Prv = self.__Appr_Prev 
-
-    L_LastWZ = LastL[-C.WinSize-1:]
-
-    MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
-    min=MMList[0][1]['min']
-    max=MMList[0][1]['max']
-    sum=MMList[0][1]['amount']
-    self.__MinMaxL.append([ts, min, max, sum])
-    self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
-
 
     if Prv['mints'] == None:
       Prv['mints'] = ts
@@ -234,7 +217,7 @@ class MyAlgos:
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
       #if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
       if ts-Prv['mints'] > age and Prv['minprev'] > min:
-        print("[%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
+        print(" [%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = v[1]
         T.PlaceOrderAsk(price, \
@@ -264,7 +247,7 @@ class MyAlgos:
  #     if Prv['maxcnt'] > age:
       #if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
       if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
-        print("[%s] Age %d cnt %d (bid appr)" % (MyTime(ts).StrDayTime(), ts-Prv['maxts'], Prv['maxcnt']))
+        print(" [%s] Age %d cnt %d (bid appr)" % (MyTime(ts).StrDayTime(), ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
           print("prev < max", end='')
         #price = v[1]*0.99
@@ -300,17 +283,14 @@ class MyAlgos:
   def SimuIntraBand(self, v, LastL, C):
     Placed=False
     T = self.__T
-    val = 0.01
+    val = C.AltTradingVal
     ts = v[0]
     p  = v[1]
 
     #print("SimuIntraBand: Cur: %f (WinSize: %d)" % (v[1], C.WinSize))
 
-    MMList = self.BuildMinMaxList2(LastL, C.WinSize)
+    (min, max, sum) = self.GetCurMinMaxSum()
 
-    min = MMList[0][1]['min']
-    max = MMList[0][1]['max']
-    
     if (max-min)*0.9+min < p and p < max:
       print("----------------------------------->Curval top: %f < %f=max" % (p, max))
       if T.GetTypeOfLastFilled('IntraBand') != 'bid':
@@ -325,16 +305,29 @@ class MyAlgos:
     return Placed
 
 
-
   def AStopLoss(self, v, LastL, C):
     Placed=False
-    val = 0.01
+    val = C.AltTradingVal
     ts = v[0]
     p  = v[1]
     T  = self.__T
+
+    min_age = 100
  
-    min = self.__MinMaxL[-1][1]
-    max = self.__MinMaxL[-1][2]
+    Test=False
+    if Test:
+      L_LastWZ = LastL[-C.WinSize-1:]
+      MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      min=MMList[0][1]['min']
+      max=MMList[0][1]['max']
+      sum=MMList[0][1]['amount']
+      self.__MinMaxL.append([ts, min, max, sum])
+      self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
+
+    (min, max, sum) = self.GetCurMinMaxSum()
+
+    #min = self.__MinMaxL[-1][1]
+    #max = self.__MinMaxL[-1][2]
 
     #print("mmlist: %s. min/max: %f/%f" % (str(self.__MinMaxL[-1]), min, max))
 
@@ -346,32 +339,106 @@ class MyAlgos:
       price = v[1] # *0.99
       T.PlaceOrderAsk(price, val, C.couple, id='first', ts=ts)
       return True
-                                 
-    MinMaxOfLastFilled = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilled[1])
 
-    # Buy very first:
-    if LastFilled == None:
-      price = p # *0.99
-      T.PlaceOrderAsk(price, val, C.couple, id='StoppLoss', ts=ts)
-      return True
-  
-    #print(str(LastFilled))
+    LastFilledTS = LastFilled[1]
 
-    if LastFilled[3] == 'StopLoss':
+    if ts-LastFilledTS < min_age:
       return False
+                                 
+    (LastTs, LastMin, LastMax, LastSum) = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
+
+    minmax=LastMax-LastMin
+
+    #if LastFilled[3] == 'StopLoss':
+    #  return False
 
     if LastFilled[0] == 'ask':
-      if p < MinMaxOfLastFilled[1]: # LastFilled[2]:
-        price = MinMaxOfLastFilled[1]*0.99 #min*0.99 #LastFilled[2] *0.99
+      if p < LastMin and min < LastMin: 
+  #      price = min*0.99 #LastMin*0.99  #min*0.99 #LastFilled[2] *0.99
+        price = p
         #print("[%s] (bid sl)" % (MyTime(ts).StrDayTime()))
+        #res=T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         res=T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         Placed=True
     else:
       #print("lastfilled bid. p %f max %f" % (p, max))
-      if p > MinMaxOfLastFilled[2]: # LastFilled[2]:
-        price = MinMaxOfLastFilled[2]*1.01 #max*1.01 #LastFilled[2] *1.01
+      if p > LastMax and max > LastMax: # LastFilled[2]:
+ #       price = max*1.01 #LastMax*1.01 #max*1.01 #LastFilled[2] *1.01
+        price = p
         #print("[%s] (ask sl)" % (MyTime(ts).StrDayTime()))
+        #res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+        #print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
+        Placed=True
+    return Placed
+
+
+  # similar to AStopLoss
+  def AStartBuy(self, v, LastL, C):
+    Placed=False
+    val = C.AltTradingVal
+    ts = v[0]
+    p  = v[1]
+    T  = self.__T
+
+    min_age = 100
+ 
+    Test=False
+    if Test:
+      L_LastWZ = LastL[-C.WinSize-1:]
+      MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      min=MMList[0][1]['min']
+      max=MMList[0][1]['max']
+      sum=MMList[0][1]['amount']
+      self.__MinMaxL.append([ts, min, max, sum])
+      self.__TimePerWinSize.append([ts, ts-L_LastWZ[0][0]])
+
+
+    #min = self.__MinMaxL[-1][1]
+    #max = self.__MinMaxL[-1][2]
+
+    (min, max, sum) = self.GetCurMinMaxSum()
+
+    #print("mmlist: %s. min/max: %f/%f" % (str(self.__MinMaxL[-1]), min, max))
+
+
+    LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+
+    # Buy very first:
+    if LastFilled == None:
+      price = v[1] # *0.99
+      T.PlaceOrderAsk(price, val, C.couple, id='first', ts=ts)
+      return True
+
+    LastFilledTS = LastFilled[1]
+
+    if ts-LastFilledTS < min_age:
+      return False
+                                 
+    (LastTs, LastMin, LastMax, LastSum) = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
+
+    minmax=LastMax-LastMin
+
+    #if LastFilled[3] == 'StopLoss':
+    #  return False
+
+    #if LastFilled[0] == 'ask':
+    if LastFilled[0] == 'bid':
+      if p < LastMin and min < LastMin: 
+  #      price = min*0.99 #LastMin*0.99  #min*0.99 #LastFilled[2] *0.99
+        price = p*0.99
+        #print("[%s] (bid sl)" % (MyTime(ts).StrDayTime()))
+        #res=T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
+        res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+        Placed=True
+    else:
+      #print("lastfilled bid. p %f max %f" % (p, max))
+      if p > LastMax and max > LastMax: # LastFilled[2]:
+ #       price = max*1.01 #LastMax*1.01 #max*1.01 #LastFilled[2] *1.01
+        price = p*1.01
+        #print("[%s] (ask sl)" % (MyTime(ts).StrDayTime()))
+        #res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
+        res=T.PlaceOrderBid(price, val, C.couple, id='StopLoss', ts=ts)
         #print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
         Placed=True
     return Placed
