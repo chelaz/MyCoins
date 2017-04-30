@@ -121,7 +121,7 @@ if mode == "simulate":
 #plt.subplot(2,1,1)
 
 if mode != "simulate":
-  MMPlot=R.GetMMPlot(couple, R.C.WinSize, Percentage=False)
+  MMPlot=R.GetMMPlot(couple, 100, Percentage=False)
   lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
   plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
