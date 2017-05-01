@@ -69,11 +69,11 @@ R = MyRich(Keys)
 
 if len(sys.argv) > 1:
   modes = ["plot", "simulate", "info"]
-  mode=R.ParseCmdLineArgs(sys.argv, modes)
+  attrs = ["alt", "noalt", "nomm" ]
+  (mode,attrL)=R.ParseCmdLineArgs(sys.argv, modes, attrs)
 
   if mode == "help":
     exit(0)
-
 
 
 #R.Info()
@@ -120,15 +120,16 @@ if mode == "info":
   R.InfoMode(R.week, R.year, R.version)
   R.PrintElapsed("Info")
 
+# print min max graphs if not "nomm"
+if "nomm" not in attrL:
+  if mode != "simulate":
+    MMPlot=R.GetMMPlot(couple, 100, Percentage=False)
+    lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
+    plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
 
-if mode != "simulate":
-  MMPlot=R.GetMMPlot(couple, 100, Percentage=False)
-  lines=plt.plot(*MMPlot[0], 'r-', *MMPlot[1],'g-')
-  plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
-
-MMPlot2=R.GetMMPlot2()
-lines2=plt.plot(*MMPlot2[0], 'r:', *MMPlot2[1],'g:')
-plt.setp(lines2, linewidth=1, linestyle=':', alpha=0.8)
+  MMPlot2=R.GetMMPlot2()
+  lines2=plt.plot(*MMPlot2[0], 'r:', *MMPlot2[1],'g:')
+  plt.setp(lines2, linewidth=1, linestyle=':', alpha=0.8)
 
 
 DoPlot(R, couple, 'b-', Percentage=False)
