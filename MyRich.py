@@ -35,7 +35,7 @@ class MyRich:
   week=0 # 0 is this week
   weeks=[] # list of weeks given by cmd line args comma separated
   year=0 # 0 is this year 
-  version=0
+  version=None
   __filename=""
 
   C = None # Configuration if set 
@@ -760,6 +760,28 @@ class MyRich:
     if version == None:
       version = self.__V
     self.LoadList(version=version, week=week, year=year)
+
+    couple="dsh_btc"
+ 
+    L=self.GetPriceList(couple)
+
+    perc_prev=0
+    cnt_prev=0
+    ts_prev=L[0][0]
+    for i in range(len(L)):
+      v  = L[i]
+      ts = v[0]
+
+      perc=round(i/len(L)*100, 0)
+      if perc % 5 == 0:
+        if perc_prev != perc:
+          print("%3d%% [%s](%d) cnt %5d diff %d timediff %d" % \
+                (perc, MyTime(ts).StrDayTime(), ts, i, i-cnt_prev, ts-ts_prev))
+          cnt_prev  = i
+          ts_prev   = ts
+          perc_prev = perc
+
+
 
   def ParseCmdLineArgs(self, argv, modes):
     mode=""

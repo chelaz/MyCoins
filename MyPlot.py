@@ -68,7 +68,7 @@ def ConfigPlot(couple, ax=None):
 R = MyRich(Keys)
 
 if len(sys.argv) > 1:
-  modes = ["plot", "simulate"]
+  modes = ["plot", "simulate", "info"]
   mode=R.ParseCmdLineArgs(sys.argv, modes)
 
   if mode == "help":
@@ -78,16 +78,12 @@ if len(sys.argv) > 1:
 
 #R.Info()
 
-if not R.LoadWeeks(weeks=MyRich.weeks, year=0):
-  print("exiting")
-  exit(0)
-#R.LoadList(week=13)
-#R.LoadList(week=14)
+if mode != "info":
+  if not R.LoadWeeks(weeks=MyRich.weeks, year=0):
+    print("exiting")
+    exit(0)
 
-
-#R.RecPublicTrades("dsh_eur", 10)
-
-R.PrintElapsed("Load")
+  R.PrintElapsed("Load")
 
 #couple1="dsh_eur"
 #couple2="eth_eur"
@@ -119,6 +115,11 @@ if mode == "simulate":
 #ConfigPlot(couple_eb)
 
 #plt.subplot(2,1,1)
+
+if mode == "info":
+  R.InfoMode(R.week, R.year, R.version)
+  R.PrintElapsed("Info")
+
 
 if mode != "simulate":
   MMPlot=R.GetMMPlot(couple, 100, Percentage=False)
