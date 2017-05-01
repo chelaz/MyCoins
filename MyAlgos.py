@@ -199,8 +199,10 @@ class MyAlgos:
     #age = 8000
 
     LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
-
+    diffts=self.GetTimePerWinSize()[-1][1]
     (min, max, sum) = self.GetCurMinMaxSum()
+
+    print(" %d" % diffts)
  
     Prv = self.__Appr_Prev 
 
@@ -223,7 +225,8 @@ class MyAlgos:
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
       #if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
       #if ts-Prv['mints'] > age and Prv['minprev'] > min:
-      if ts-Prv['mints'] > age and Prv['minprev'] > min and p < MyH.IntPerc(min, max, 1/3):
+      if ts-Prv['mints'] > age and Prv['minprev'] > min and diffts < 3000:
+      #if ts-Prv['mints'] > age and Prv['minprev'] > min and p < MyH.IntPerc(min, max, 1/2):
         print(" [%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = p
@@ -254,7 +257,8 @@ class MyAlgos:
  #     if Prv['maxcnt'] > age:
       #if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
       #if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
-      if ts-Prv['maxts'] > age and Prv['maxprev'] < max and p > MyH.IntPerc(min, max, 2/3):
+      if ts-Prv['maxts'] > age and Prv['maxprev'] < max and diffts < 3000:
+      #if ts-Prv['maxts'] > age and Prv['maxprev'] < max and p > MyH.IntPerc(min, max, 1/2):
 
         print(" [%s] Age %d cnt %d (bid appr)" % (MyTime(ts).StrDayTime(), ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:

@@ -69,7 +69,12 @@ R = MyRich(Keys)
 
 if len(sys.argv) > 1:
   modes = ["plot", "simulate", "info"]
-  attrs = ["alt", "noalt", "nomm", "labels" ]
+  attrs = ["alt", "noalt", "nomm", "labels", "tpu" ]
+  # alt: only alternating
+  # noalt: not only alternating
+  # nomm:  dont plot min max
+  # labels: plot ts labels
+  # tpu: time per unit means time per WinSize
   (mode,attrL)=R.ParseCmdLineArgs(sys.argv, modes, attrs)
 
   if mode == "help":
@@ -166,8 +171,10 @@ ax=ConfigPlot(couple)
 if mode == "simulate":
   ax2 = ax.twinx()
   #plt.subplot(2,1,2)
-  linesS=ax2.plot(*SimPlots['balance'], 'b-')
-  #linesS=ax2.plot(*SimPlots['timePerWS'], 'r-')
+  if "tpu" in attrL:
+    linesS=ax2.plot(*SimPlots['timePerWS'], 'r-')
+  else:
+    linesS=ax2.plot(*SimPlots['balance'], 'b-')
   #linesS=ax2.plot(*MMPlot2[2], 'g-')
   ConfigPlot(couple, ax2)
 

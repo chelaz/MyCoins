@@ -642,10 +642,10 @@ class MyRich:
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
                PrepareFct=self.__A.ACalcMinMax, \
-               Algos=[self.__A.AIntraBand] \
+               #Algos=[self.__A.AIntraBand] \
                #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
                #Algos=[self.__A.AApproachExtr, self.__A.AIntraBand] \
-               #Algos=[self.__A.AApproachExtr] \
+               Algos=[self.__A.AApproachExtr] \
                )
 
     if "alt" in attrL:
