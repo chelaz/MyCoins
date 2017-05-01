@@ -642,9 +642,10 @@ class MyRich:
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
                PrepareFct=self.__A.ACalcMinMax, \
-               #Algos=[self.__A.AStartBuy] \
+               Algos=[self.__A.AIntraBand] \
                #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
-               Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
+               #Algos=[self.__A.AApproachExtr, self.__A.AIntraBand] \
+               #Algos=[self.__A.AApproachExtr] \
                )
 
     if "alt" in attrL:
@@ -675,6 +676,8 @@ class MyRich:
 #    T.PrintEventBid()  
 
     dict = {}
+    dict['ask'] = T.GetPlotHistAsk()
+    dict['bid'] = T.GetPlotHistBid()
     dict['askAppr'] = T.GetPlotHistAsk('ApproachExtr')
     dict['bidAppr'] = T.GetPlotHistBid('ApproachExtr')
     dict['askIntr'] = T.GetPlotHistAsk('InterBand')

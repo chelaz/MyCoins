@@ -44,8 +44,13 @@ class MyTime:
     print(str(diff), end=end)
 
 
+# Helper Class with no data members
+class MyH:
 
-class MyAlgoHelpers:
+  # Value between min and max in perc: min = 0% and max = 100%
+  def IntPerc(min, max, perc):
+    return min*(1-perc)+max*perc
+
 
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def BuildMinMaxList2(PriceList, winsize, Debug=False):
@@ -128,7 +133,7 @@ class MyAlgos:
   def ACalcMinMax(self, v, LastL, C):
     ts=v[0]
     L_LastWZ = LastL[-C.WinSize-1:]
-    MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+    MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
     sum=MMList[0][1]['amount']
@@ -183,7 +188,7 @@ class MyAlgos:
   # vc:    current price
   # LastL: last traded values list
   # C:     SimuConf
-  def SimuApproachExtr(self, v, LastL, C):
+  def AApproachExtr(self, v, LastL, C):
     Placed=False
     T = self.__T
     val = C.AltTradingVal
@@ -217,7 +222,8 @@ class MyAlgos:
       Prv['mincnt'] += 1
       #if Prv['mincnt'] > age and Prv['minprev'] > min:
       #if ts-Prv['mints'] > age and Prv['mincnt'] > age/3 and Prv['minprev'] > min:
-      if ts-Prv['mints'] > age and Prv['minprev'] > min:
+      #if ts-Prv['mints'] > age and Prv['minprev'] > min:
+      if ts-Prv['mints'] > age and Prv['minprev'] > min and p < MyH.IntPerc(min, max, 1/3):
         print(" [%s] Age %d cnt %d (ask appr)" % (MyTime(ts).StrDayTime(), ts-Prv['mints'], Prv['mincnt']))
         #price = v[1]*1.01
         price = p
@@ -247,7 +253,9 @@ class MyAlgos:
       Prv['maxcnt'] += 1
  #     if Prv['maxcnt'] > age:
       #if ts-Prv['maxts'] > age and Prv['maxcnt'] > age/3 and Prv['maxprev'] < max:
-      if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
+      #if ts-Prv['maxts'] > age and Prv['maxprev'] < max:
+      if ts-Prv['maxts'] > age and Prv['maxprev'] < max and p > MyH.IntPerc(min, max, 2/3):
+
         print(" [%s] Age %d cnt %d (bid appr)" % (MyTime(ts).StrDayTime(), ts-Prv['maxts'], Prv['maxcnt']))
         if Debug:
           print("prev < max", end='')
@@ -281,7 +289,7 @@ class MyAlgos:
   # vc:    current price
   # LastL: last traded values list
   # C:     SimuConf
-  def SimuIntraBand(self, v, LastL, C):
+  def AIntraBand(self, v, LastL, C):
     Placed=False
     T = self.__T
     val = C.AltTradingVal
@@ -292,17 +300,19 @@ class MyAlgos:
 
     (min, max, sum) = self.GetCurMinMaxSum()
 
-    if (max-min)*0.9+min < p and p < max:
-      print("----------------------------------->Curval top: %f < %f=max" % (p, max))
-      if T.GetTypeOfLastFilled('IntraBand') != 'bid':
-        T.PlaceOrderBid(p, val, C.couple, id='IntraBand', ts=ts)
-        Placed=True
+    #if (max-min)*0.9+min < p and p < max:
+    if MyH.IntPerc(min, max, 0.8) < p and p < max:
+      #print("----------------------------------->Curval top: %f < %f=max" % (p, max))
+      #if T.GetTypeOfLastFilled('IntraBand') != 'bid':
+      T.PlaceOrderBid(p, val, C.couple, id='', ts=ts)
+      Placed=True
 
-    if (max-min)*0.1+min > p and p > min:
-      print("----------------------------------->Curval bottom: %f > %f=min" % (p, min))
-      if T.GetTypeOfLastFilled('IntraBand') != 'ask':
-        T.PlaceOrderAsk(p, val, C.couple, id='IntraBand', ts=ts)
-        Placed=True
+    #if (max-min)*0.1+min > p and p > min:
+    if MyH.IntPerc(min, max, 0.2) > p and p > min:
+      #print("----------------------------------->Curval bottom: %f > %f=min" % (p, min))
+      #if T.GetTypeOfLastFilled('IntraBand') != 'ask':
+      T.PlaceOrderAsk(p, val, C.couple, id='', ts=ts)
+      Placed=True
     return Placed
 
 
@@ -318,7 +328,7 @@ class MyAlgos:
     Test=False
     if Test:
       L_LastWZ = LastL[-C.WinSize-1:]
-      MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
       min=MMList[0][1]['min']
       max=MMList[0][1]['max']
       sum=MMList[0][1]['amount']
@@ -346,7 +356,7 @@ class MyAlgos:
     if ts-LastFilledTS < min_age:
       return False
                                  
-    (LastTs, LastMin, LastMax, LastSum) = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
+    (LastTs, LastMin, LastMax, LastSum) = MyH.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
 
     minmax=LastMax-LastMin
 
@@ -387,7 +397,7 @@ class MyAlgos:
     Test=False
     if Test:
       L_LastWZ = LastL[-C.WinSize-1:]
-      MMList = MyAlgoHelpers.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
       min=MMList[0][1]['min']
       max=MMList[0][1]['max']
       sum=MMList[0][1]['amount']
@@ -416,7 +426,7 @@ class MyAlgos:
     if ts-LastFilledTS < min_age:
       return False
                                  
-    (LastTs, LastMin, LastMax, LastSum) = MyAlgoHelpers.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
+    (LastTs, LastMin, LastMax, LastSum) = MyH.GetMinMaxbyTS(self.__MinMaxL, LastFilledTS)
 
     minmax=LastMax-LastMin
 
