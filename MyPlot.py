@@ -69,7 +69,7 @@ R = MyRich(Keys)
 
 if len(sys.argv) > 1:
   modes = ["plot", "simulate", "info"]
-  attrs = ["alt", "noalt", "nomm" ]
+  attrs = ["alt", "noalt", "nomm", "labels" ]
   (mode,attrL)=R.ParseCmdLineArgs(sys.argv, modes, attrs)
 
   if mode == "help":
@@ -97,7 +97,7 @@ couple=couple_db
 #couple=couple_ee
 #
 if mode == "simulate":
-  SimPlots=R.SimulateTradingAndPlot(couple)
+  SimPlots=R.SimulateTradingAndPlot(couple, attrL)
   R.PrintElapsed("Simulate Trading")
  
   #if len(AskBidPlots[0][0]) == 0:
@@ -136,17 +136,17 @@ DoPlot(R, couple, 'b-', Percentage=False)
 #ConfigPlot(couple)
 
 if mode == "simulate":
-#  linesSA,=plt.plot(*SimPlots['askAppr'], 'rv', label="Ask", markersize=7)
-#  linesSB,=plt.plot(*SimPlots['bidAppr'], 'g^', label="Bid", markersize=7)
+  linesSA,=plt.plot(*SimPlots['askAppr'], 'rv', label="Ask", markersize=7)
+  linesSB,=plt.plot(*SimPlots['bidAppr'], 'g^', label="Bid", markersize=7)
   linesSA,=plt.plot(*SimPlots['askIntr'], 'rv', label="Ask", markersize=7)
   linesSB,=plt.plot(*SimPlots['bidIntr'], 'g^', label="Bid", markersize=7)
   #plt.setp(lines, linewidth=3, linestyle='-', alpha=0.3)
   linesS2A,=plt.plot(*SimPlots['askStop'], 'bv', label="Ask", markersize=7)
   linesS2B,=plt.plot(*SimPlots['bidStop'], 'k^', label="Bid", markersize=7)
-  plt.legend([linesSA,linesSB, linesS2A, linesS2B], ['Ask v', 'Bid ^', 'Ask v', 'Bid ^'])
+  plt.legend([linesSA,linesSB, linesS2A, linesS2B], ['Ask', 'Bid', 'Ask', 'Bid'])
  
-  PrintLabels = False
-  if PrintLabels:
+  if "labels" in attrL:
+    print("Printing labels")
     # print labels for bid
     for i in range(len(SimPlots['bidAppr'][0])):
       ts=SimPlots['bidAppr'][0][i]

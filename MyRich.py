@@ -637,7 +637,7 @@ class MyRich:
     
     self.SaveList()
 
-  def SimulateTradingAndPlot(self, couple):
+  def SimulateTradingAndPlot(self, couple, attrL):
     
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
@@ -646,6 +646,15 @@ class MyRich:
                #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
                Algos=[self.__A.SimuApproachExtr, self.__A.AStopLoss] \
                )
+
+    if "alt" in attrL:
+      C.OnlyAlternating = True
+    else:
+      if "noalt" in attrL:
+        C.OnlyAlternating = False
+      #else: take default
+ 
+
 #    C=SimuConf(T, Algo=self.__A.AStopLoss, couple=couple, WinSize=10)
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=20)
 #please edit in MySimu:    #C.OnlyAlternating=False
@@ -855,7 +864,7 @@ class MyRich:
           for a in attrs:
             AttrStr= AttrStr+" {"+a+"}"
            
-          print("Usage:")
+          print("Usage: [] indicate modes and {} indicate attributes, configuration is [param=val]")
           print("  %s [help] [path=/DATA_PATH]%s %s [version=0] [year=0] [weeks=w1,..,wn] [fn=FILENAME] [fromts=0] [tots=0] [debugts=0]" % (argv[0], ModeStr, AttrStr))
           mode="help"
 
