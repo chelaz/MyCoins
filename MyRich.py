@@ -285,11 +285,12 @@ class MyRich:
       # Buy very first:
       v  = L[0]
       ts=v[0]
-      price = v[1] # *0.99
+      price = v[1]*0.99
+      print("Placing first order: %f" % price)
       T.PlaceOrderAsk(price, C.AltTradingVal, C.couple, id='first', ts=ts)
 
     ts_prev=0
-    perc_prev=0
+    perc_prev=-1
     for i in range(len(L)):
       v  = L[i]
       #v is last traded value
@@ -642,10 +643,11 @@ class MyRich:
 #    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
                PrepareFct=self.__A.ACalcMinMax, \
+               Algos=[self.__A.AStopLoss] \
                #Algos=[self.__A.AIntraBand] \
                #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
                #Algos=[self.__A.AApproachExtr, self.__A.AIntraBand] \
-               Algos=[self.__A.AApproachExtr] \
+               #Algos=[self.__A.AApproachExtr] \
                )
 
     if "alt" in attrL:
@@ -714,7 +716,7 @@ class MyRich:
 
       T=MyTrade({ 'btc' : 1.0, 'dsh' : 1.0, 'eth' : 1.0 }) 
 
-      C=SimuConf(T, Algo=self.SimuInterBand, couple="dsh_btc", WinSize=w, MinMaxEpsPerc=p) 
+      C=SimuConf(T, Algo=self.AInterBand, couple="dsh_btc", WinSize=w, MinMaxEpsPerc=p) 
       C.PlaceBidFact = pf
       C.PlaceAskFact = pf
       C.Print()
@@ -1028,7 +1030,7 @@ def main(argv=None):
     attrL=[]
 
     if len(argv) > 1:
-      modes = ["functest", "info", "crawler", "v0to1", "remdupl", "simulate" ]
+      modes = ["functest", "info", "crawler", "v0to1", "remdupl", "simulate", "simplot" ]
       attrs = ["alt", "noalt"]
       (mode,attrL)=R.ParseCmdLineArgs(argv, modes, attrs)
 
@@ -1052,6 +1054,12 @@ def main(argv=None):
       R.RemoveDuplicatesMode(MyRich.week, MyRich.year)
     elif mode == "simulate":
       R.SimulateTradingMode(MyRich.weeks, MyRich.year)
+    elif mode == "simplot":
+      if not R.LoadWeeks(weeks=MyRich.weeks, year=MyRich.year):
+        print("exiting")
+        exit(0)
+      SimPlots=R.SimulateTradingAndPlot("dsh_btc", attrL)
+      R.PrintElapsed("Simulate Plot")
     else:
       R.Test()
     

@@ -396,7 +396,7 @@ class MyAlgos:
     p  = v[1]
     T  = self.__T
 
-    min_age = 100
+    min_age = 0
  
     Test=False
     if Test:
