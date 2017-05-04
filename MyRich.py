@@ -640,12 +640,12 @@ class MyRich:
 
   def SimulateTradingAndPlot(self, couple, attrL):
     
-#    C=SimuConf(T, Algo=self.SimuInterBand, couple=couple, WinSize=1000)
+#    C=SimuConf(T, Algo=self.AInterBand, couple=couple, WinSize=1000)
     C=SimuConf(couple=couple, WinSize=100, \
                PrepareFct=self.__A.ACalcMinMax, \
-               Algos=[self.__A.AStopLoss] \
+               Algos=[self.__A.AInterBand] \
                #Algos=[self.__A.AIntraBand] \
-               #Algos=[self.__A.SimuInterBand, self.__A.AStopLoss] \
+               #Algos=[self.__A.AInterBand, self.__A.AStopLoss] \
                #Algos=[self.__A.AApproachExtr, self.__A.AIntraBand] \
                #Algos=[self.__A.AApproachExtr] \
                )
@@ -687,8 +687,8 @@ class MyRich:
     dict['askStop'] = T.GetPlotHistAsk('StopLoss')
     dict['bidStop'] = T.GetPlotHistBid('StopLoss')
     dict['balance'] = T.GetPlotHistBalance("btc")
-    dict['askApEv'] = T.GetPlotEventAsk('ApproachExtr')
-    dict['bidApEv'] = T.GetPlotEventBid('ApproachExtr')
+    dict['askApEv'] = T.GetPlotEventAsk('InterBand')
+    dict['bidApEv'] = T.GetPlotEventBid('InterBand')
     dict['askSLEv'] = T.GetPlotEventAsk('StopLoss')
     dict['bidSLEv'] = T.GetPlotEventBid('StopLoss')
     dict['timePerWS'] = self.GetTimePerWSPlot()

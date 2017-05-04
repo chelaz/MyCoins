@@ -93,6 +93,8 @@ class MyH:
   #items in MinMaxL: [ts, min, max]
   def GetMinMaxbyTS(MinMaxL, ts):
     TSL = list(filter(lambda v: v[0] == ts, MinMaxL))
+    if not TSL:
+      return None
     return TSL[0]
 
 
@@ -147,13 +149,35 @@ class MyAlgos:
   # vc:    current price
   # LastL: last traded values list
   # C:     SimuConf
-  def SimuInterBand(self, v, LastL, C):
+  def AInterBand(self, v, LastL, C):
     Placed=False
     T = self.__T
     ts = v[0]
+    p  = v[1]
+
+    age=100
 
     (min, max, sum) = self.GetCurMinMaxSum()
     maxmin = max-min
+
+#    cnt=0
+#    while MyH.GetMinMaxbyTS(self.__MinMaxL, ts-age-cnt) == None and cnt < 10:
+#      #print("trying ts %d with cnt %d" % (ts-age-cnt, cnt))
+#      cnt+=1
+#    LastMM = MyH.GetMinMaxbyTS(self.__MinMaxL, ts-age-cnt)
+#    if LastMM == None:
+#      print("no ts avail")
+#      return
+
+#    (LastTs, LastMin, LastMax, LastSum) = LastMM
+
+    dist = int(3*C.WinSize/4)
+
+    MMList=self.GetMinMaxList()
+    if len(MMList) < dist:
+      return False
+    LastMin = MMList[-dist][1]
+    LastMax = MMList[-dist][2]
 
     #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
     #                       v[1]-min, min, v[1], max, max-v[1], \
@@ -161,10 +185,12 @@ class MyAlgos:
 
     eps = maxmin*C.MinMaxEpsPerc
 
-    if v[1] < min-eps:
+    if v[1] < min-eps and LastMin <= min and LastMax < max:
 #      price = min+maxmin*C.PlaceBidFact
       #price = min-eps
-      price = 0.985*min
+      #price = 0.985*min
+      price = p-(LastL[-1][1]-p)
+
       #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
 #      print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
@@ -172,10 +198,12 @@ class MyAlgos:
                       C.AltTradingVal, C.couple, id='InterBand', ts=ts)
       Placed=True
 
-    if v[1] > max+eps:
+    if v[1] > max+eps and LastMax >= max and LastMin > min:
 #     price = max-maxmin*C.PlaceAskFact
       #price = max+eps
-      price = 1.015*max
+      #price = 1.015*max
+      price = p+(p-LastL[-1][1])
+
       #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
       T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
@@ -380,7 +408,7 @@ class MyAlgos:
       if p > LastMax and max > LastMax: # LastFilled[2]:
  #       price = max*1.01 #LastMax*1.01 #max*1.01 #LastFilled[2] *1.01
         price = p
-        #print("[%s] (ask sl)" % (MyTime(ts).StrDayTime()))
+        print("[%s] (ask sl)" % (MyTime(ts).StrDayTime()))
         #res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         res=T.PlaceOrderAsk(price, val, C.couple, id='StopLoss', ts=ts)
         #print("  [%d] (v=%f) placing %f %s" % (ts, p, price, str(res)))
