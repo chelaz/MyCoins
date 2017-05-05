@@ -155,11 +155,18 @@ class MyAlgos:
     ts = v[0]
     p  = v[1]
 
-    age=100
-
     (min, max, sum) = self.GetCurMinMaxSum()
     maxmin = max-min
 
+
+#    LastFilled = T.GetLastFilled() # ('ask'/'bid', ts, price, id)
+#    if LastFilled != None:
+#      if LastFilled[0] == 'ask' and LastFilled[2] < p:
+#        return False
+#      if LastFilled[0] == 'bid' and LastFilled[2] > p:
+#        return False
+
+#    age=100
 #    cnt=0
 #    while MyH.GetMinMaxbyTS(self.__MinMaxL, ts-age-cnt) == None and cnt < 10:
 #      #print("trying ts %d with cnt %d" % (ts-age-cnt, cnt))
@@ -171,13 +178,21 @@ class MyAlgos:
 
 #    (LastTs, LastMin, LastMax, LastSum) = LastMM
 
-    dist = int(3*C.WinSize/4)
+#    dist  = int(3*C.WinSize/4)
+#    dist2 = int(dist/2)
+
+    dist  = int(C.WinSize/2)
+    dist2 = int(dist/2)
+
+#    dist  = 10
+#    dist2 = 5
 
     MMList=self.GetMinMaxList()
     if len(MMList) < dist:
       return False
     LastMin = MMList[-dist][1]
     LastMax = MMList[-dist][2]
+    Lastp   = LastL[-dist2][1]
 
     #print("SimuInterBand: [%d] Cur: d%f %f < %f < %f D%f (WS %d)" % (ts,\
     #                       v[1]-min, min, v[1], max, max-v[1], \
@@ -185,28 +200,31 @@ class MyAlgos:
 
     eps = maxmin*C.MinMaxEpsPerc
 
-    if v[1] < min-eps and LastMin <= min and LastMax < max:
+    if Lastp < LastMin-eps:
+      pass
+    pc = MyH.IntPerc(min, max, 0.1)
+    if Lastp < LastMin-eps and p > MyH.IntPerc(min, max, 0.2):
 #      price = min+maxmin*C.PlaceBidFact
       #price = min-eps
       #price = 0.985*min
       price = p-(LastL[-1][1]-p)
 
-      #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], min))
+      #print("----------------------------------->Curval below min: %f < %f=min" % (p, min))
 #      print("Placing at : %f = %f + (%f-%f)*%f" % (price, min, max, min, C.PlaceBidFact))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'bid':
-      T.PlaceOrderAsk(price, # C.PlaceBidFact*v[1], \
+      T.PlaceOrderAsk(price, # C.PlaceBidFact*p, \
                       C.AltTradingVal, C.couple, id='InterBand', ts=ts)
       Placed=True
 
-    if v[1] > max+eps and LastMax >= max and LastMin > min:
+    if Lastp > LastMax+eps and p < MyH.IntPerc(min, max, 0.8):
 #     price = max-maxmin*C.PlaceAskFact
       #price = max+eps
       #price = 1.015*max
       price = p+(p-LastL[-1][1])
 
-      #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], max))
+      #print("----------------------------------->Curval above max: %f > %f=max" % (p, max))
       #if not C.OnlyAlternating or T.GetTypeOfLastFilled('InterBand') != 'ask':
-      T.PlaceOrderBid(price, #C.PlaceAskFact*v[1], \
+      T.PlaceOrderBid(price, #C.PlaceAskFact*p, \
                       C.AltTradingVal, C.couple, id='InterBand', ts=ts)
       Placed=True
     return Placed
