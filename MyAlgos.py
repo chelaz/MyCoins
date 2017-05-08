@@ -52,8 +52,8 @@ class MyH:
     return min*(1-perc)+max*perc
 
 
-  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  def BuildMinMaxList2(PriceList, winsize, Debug=False):
+  # Tuple in MMList: [ts, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  def BuildMinMaxList(PriceList, winsize, Debug=False):
 
     L=PriceList #self.GetPriceList(couple)
 
@@ -135,7 +135,7 @@ class MyAlgos:
   def ACalcMinMax(self, v, LastL, C):
     ts=v[0]
     L_LastWZ = LastL[-C.WinSize-1:]
-    MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
+    MMList = MyH.BuildMinMaxList(L_LastWZ, C.WinSize)
     min=MMList[0][1]['min']
     max=MMList[0][1]['max']
     sum=MMList[0][1]['amount']
@@ -378,7 +378,7 @@ class MyAlgos:
     Test=False
     if Test:
       L_LastWZ = LastL[-C.WinSize-1:]
-      MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      MMList = MyH.BuildMinMaxList(L_LastWZ, C.WinSize)
       min=MMList[0][1]['min']
       max=MMList[0][1]['max']
       sum=MMList[0][1]['amount']
@@ -447,7 +447,7 @@ class MyAlgos:
     Test=False
     if Test:
       L_LastWZ = LastL[-C.WinSize-1:]
-      MMList = MyH.BuildMinMaxList2(L_LastWZ, C.WinSize)
+      MMList = MyH.BuildMinMaxList(L_LastWZ, C.WinSize)
       min=MMList[0][1]['min']
       max=MMList[0][1]['max']
       sum=MMList[0][1]['amount']

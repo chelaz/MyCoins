@@ -28,13 +28,15 @@ from MyTrade import MyTrade
 from MySimu import SimuConf
 from MyAlgos import MyAlgos
 from MyAlgos import MyTime
-
+from MyAlgos import MyH
 
 class MyRich:
   # cmd line args
   week=0 # 0 is this week
   weeks=[] # list of weeks given by cmd line args comma separated
-  year=0 # 0 is this year 
+  year=0 # 0 is this year
+  couple='dsh_btc'
+   
   version=None
   __filename=""
 
@@ -42,6 +44,8 @@ class MyRich:
 
   # data member
   __API = None  # Instance of BTCeAPI
+
+  # V01: [ts, couple, {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
   __L = []    # Trades History
   __F = []    # Funds
   __V = 1     # File Version
@@ -150,12 +154,12 @@ class MyRich:
 
   # (ts, price, amount)
   def GetPriceList(self, couple):
-    return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']), filter(lambda v : v[1] == couple, self.__L)))
-#    return list(map(lambda v : (v[0], v[3]['price'], v[3]['amount']), filter(lambda v : v[2] == couple, self.__L)))
+    return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']),
+                filter(lambda v : v[1] == couple, self.__L)))
     
 
-  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  def BuildMinMaxList2(self, PriceList, winsize, Debug=False):
+  # Tuple in MMList: [ts, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  def _unused_BuildMinMaxList2(self, PriceList, winsize, Debug=False):
 
     L=PriceList #self.GetPriceList(couple)
 
@@ -191,65 +195,8 @@ class MyRich:
       MMList.append([v[0], {'min':min, 'max':max, 'amount':sum , 'cnt':cnt }])
   
     return MMList
+
      
-  # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
-  # obsolete
-  def BuildMinMaxList(self, couple, bucket_seconds):
-
-    Debug=False
-
-    L=self.GetPriceList(couple)
-
-    #D=MyTime()
-
-    start_ts=L[0][0]
-    
-    ts=start_ts
-    if Debug:
-      print("Starting List from %d" % start_ts)
-    
-    min=100000000000
-    max=0
-    sum=0
-    cnt=0
-
-    MMList = []
-
-    if Debug:
-      print("Dbg minmax:")
-    for v in L:
-      if Debug:
-        print("  "+str(v))
-             
-      if v[0] > ts + bucket_seconds:
-        if Debug:
-          print("  -> ts=%d, min=%f, max=%f, amt=%f" %(ts, min, max, sum))
-        MMList.append([ts, {'min':min, 'max':max, 'amount':sum , 'cnt':cnt }])
-        ts = v[0]
-        min=v[1]
-        max=v[1]
-        sum=v[2]
-        cnt=1
-      else:
-        if Debug:
-          print("  ..")
-        if min > v[1]:
-          min=v[1]
-        if max < v[1]:
-          max=v[1]
-        sum += v[2]
-        cnt += 1
-    MMList.append([ts, {'min':min, 'max':max, 'amount':sum, 'cnt':cnt }])
- 
-    if Debug:
-      print("MMList:")
-      for v in MMList:
-        print("  "+str(v))
-   
-    #D.PrintDiff()
-    
-    return MMList       
-
 ### Simulate Trading functions
 
   # T: MyTrade
@@ -260,8 +207,6 @@ class MyRich:
 
     if self.__DebugTS > 0:
       print("Debug ts: %d" % self.__DebugTS)
-
-    #val=0.01
 
     Debug=False
 
@@ -330,20 +275,6 @@ class MyRich:
       #print("{%d}" %i, end='')
       C.Apply(v, LastL)
 
-#      MMList = self.BuildMinMaxList2(LastL, C.WinSize)
-
-#      if v[1] < MMList[0][1]['min']:
-#        #print("----------------------------------->Curval below min: %f < %f=min" % (v[1], MMList[0][1]['min']))
-#        if T.GetTypeOfLastFilled('InterBand') != 'bid':
-#          T.PlaceOrderBid(PlaceBidFact*v[1], val, couple, id='InterBand', ts=ts)
-#          cnt_bid+=1
-#
-#      if v[1] > MMList[0][1]['max']:
-#        #print("----------------------------------->Curval above max: %f > %f=max" % (v[1], MMList[0][1]['max']))
-#        if T.GetTypeOfLastFilled('InterBand') != 'ask':
-#          T.PlaceOrderAsk(PlaceAskFact*v[1], val, couple, id='InterBand', ts=ts)
-#          cnt_ask+=1
-
       ts_prev = ts
 
     # end for __L
@@ -360,14 +291,8 @@ class MyRich:
     C.Print()
     return True
 
-### Plot functions
 
-  # obsolete
-  def __GetPlotList(self, List, UseTime=False):
-    if UseTime:
-      return map(lambda v : (v[1], v[3]["price"]), List)
-    else:
-      return map(lambda v : (v[0], v[3]["price"]), List)
+### Plot functions
 
   # returns a tuple of two sequences: ([timestamp0..timestampn],[price0..pricen])
   def GetPlot(self, couple, NumCoins=1.0, Percentage=False):
@@ -382,21 +307,14 @@ class MyRich:
     else:
       return (list(map(lambda v:v[0],L)), list(map(lambda v:v[1]*NumCoins,L)))
  
-  def GetMMPlot2(self):
-    MML = self.__A.GetMinMaxList()
-    MinPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[1], MML)))
-    MaxPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[2], MML)))
-    SumPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[3], MML)))
-
-    return MinPlot, MaxPlot, SumPlot
-   
+  
   def GetTimePerWSPlot(self):
     TPWSL = self.__A.GetTimePerWinSize()
     return (list(map(lambda v:v[0], TPWSL)), list(map(lambda v:v[1], TPWSL)))
 
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, WinSize, Percentage=False):
-    L=self.BuildMinMaxList2(self.GetPriceList(couple), WinSize)
+    L=MyH.BuildMinMaxList(self.GetPriceList(couple), WinSize)
     factor=1.0
 
     if Percentage:
@@ -406,6 +324,14 @@ class MyRich:
     MaxPlot=(list(map(lambda v:v[0],L)), list(map(lambda v:v[1]['max']*factor,L)))
 
     return MinPlot, MaxPlot
+ 
+  def GetMMPlot2(self):
+    MML = self.__A.GetMinMaxList()
+    MinPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[1], MML)))
+    MaxPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[2], MML)))
+    SumPlot=(list(map(lambda v:v[0], MML)), list(map(lambda v:v[3], MML)))
+
+    return MinPlot, MaxPlot, SumPlot
  
 ### Crawler
 
@@ -754,7 +680,7 @@ class MyRich:
     self.CleanHist()
     self.SetDataPath("FuncTests")
     if self.LoadList(version=1, week=14, year=2016):
-      L=self.BuildMinMaxList2(self.GetPriceList("dsh_btc"), 5)
+      L=MyH.BuildMinMaxList(self.GetPriceList("dsh_btc"), 5)
       print("MMList")
       for v in L:
         print("  "+str(v))
@@ -843,6 +769,10 @@ class MyRich:
         if "year" in arg:
           s = arg.split("=")
           MyRich.year=int(s[1])
+
+        if "couple" in arg:
+          s = arg.split("=")
+          MyRich.couple=s[1]
 
         if "debugts" in arg:
           s = arg.split("=")
@@ -1058,7 +988,7 @@ def main(argv=None):
       if not R.LoadWeeks(weeks=MyRich.weeks, year=MyRich.year):
         print("exiting")
         exit(0)
-      SimPlots=R.SimulateTradingAndPlot("dsh_btc", attrL)
+      SimPlots=R.SimulateTradingAndPlot(MyRich.couple, attrL)
       R.PrintElapsed("Simulate Plot")
     else:
       R.Test()

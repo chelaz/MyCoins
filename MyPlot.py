@@ -98,9 +98,10 @@ couple_eb="eth_btc"
 couple_de="dsh_eur"
 couple_ee="eth_eur"
 
-couple=couple_db
+#couple=couple_db
 #couple=couple_ee
-#
+couple=R.couple
+
 if mode == "simulate":
   SimPlots=R.SimulateTradingAndPlot(couple, attrL)
   R.PrintElapsed("Simulate Trading")
