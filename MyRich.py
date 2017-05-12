@@ -51,6 +51,8 @@ class MyRich:
   __V = 1     # File Version
   __A = None  # MyAlgos
 
+  __L_TID = dict() # dict of couples with dicts: __L_TID[couple]: tid: (ts, price, amount)
+
   __DebugTS=0
   __FromTS=0
   __ToTS=0
@@ -152,13 +154,134 @@ class MyRich:
 #    return [v['timestamp'], MyTime(v['timestamp']).str(), couple, v]
 
 
+  def BuildPriceDict(self, couple):
+    self.__L_TID[couple] = { v[2]['tid']: (v[0], v[2]['price'], v[2]['amount']) for v in filter(lambda v : v[1] == couple, self.__L) }
+   
+    Debug=False
+
+    if Debug:
+      print("List")
+      for v in self.__L:
+        print("  v: '%s'" % (str(v)))
+
+      print("Price Dict for %s" % couple)
+      for tid in self.__L_TID[couple]:
+        print("  tid=%d v: '%s'" % (tid, str(self.__L_TID[couple][tid])))
+
   # (ts, price, amount)
   def GetPriceList(self, couple):
     return list(map(lambda v : (v[0], v[2]['price'], v[2]['amount']),
                 filter(lambda v : v[1] == couple, self.__L)))
-    
+   
+  # returns (tid, ts, price, amount)
+  def __GetPriceTuple(self, tid, couple):
+    #L_couple = list(filter(lambda v : v[1] == couple, self.__L))
+    #v_nearest=L_couple[0]
+    #for v in L_couple:
+    #  if v[0] > ts:
+    #    break
+    #  v_nearest = v
+    #return v_nearest[2]['price']
+
+    L_TID=self.__L_TID[couple]
+    if L_TID == None:
+      return (None, None, None, None) 
+
+    cnt=0
+    while not tid+cnt in L_TID and cnt < 1000:
+      cnt += 1
+
+    if cnt == 1000:
+      return (None, None, None, None)
+
+    return (tid+cnt, *L_TID[tid+cnt])
+
+
+  # couples
+  #  "dsh_btc"
+  #  "dsh_eur"
+  #  "dsh_usd"
+  #  "btc_usd"
+  #  "btc_eur"
+  #  "eth_btc"
+  #  "eth_eur"
+  #  "eth_usd"
+
+  # chains: normal: sell - inverse: buy
+  ## 1. btc ->(b) dsh ->(s) eur ->(b) btc
+  # 2. btc ->(s) eur ->(b) dsh ->(s) btc
+ 
+  def GetPriceInChain(self, tid, btc):
+    Debug=False
+
+    (tid_dsh_btc, ts_dsh_btc, p_dsh_btc, a) = self.__GetPriceTuple(tid, "dsh_btc")
+    (tid_dsh_eur, ts_dsh_eur, p_dsh_eur, a) = self.__GetPriceTuple(tid, "dsh_eur")
+    (tid_btc_eur, ts_btc_eur, p_btc_eur, a) = self.__GetPriceTuple(tid, "btc_eur")
+
+    if tid_dsh_btc == None:
+      return
+    if tid_dsh_eur == None:
+      return
+    if tid_btc_eur == None:
+      return
+
+
+    ## buy dsh (ask)
+    #btc -= p_dsh_btc*amount # in btc
+    #dsh += amount
+
+    ## sell dsh
+    #eur += p_dsh_eur*amount # in eur
+    #dsh -= amount
+
+    ## buy btc
+    #amount2 = eur
+    #eur -= p_btc_eur*amount2 # in eur
+    #btc += amount2
+
+    ###########
+    dsh    = 0.0
+    eur    = 0.0
+
+    # 1. btc ->(b) dsh ->(s) eur ->(b) btc
+
+    # buy_dsh 
+    (a_dsh, p_btc) = MyTrade.CalcTrading2(p_dsh_btc, btc)  # dsh_btc = 0.08
+    dsh += a_dsh # 0.25
+    btc += p_btc # 0
+
+    # sell dsh 
+    (a_dsh, p_eur) = MyTrade.CalcTrading1(p_dsh_eur, -dsh) # dsh_eur = 100
+    dsh += a_dsh # 0
+    eur += p_eur # 25
+
+    # buy btc    
+    (a_btc, p_eur) = MyTrade.CalcTrading2(p_btc_eur, eur) # btc_eur = 1000
+    btc += a_btc # 0.025
+    eur += p_eur # 0
+
+    if Debug:
+      print("PriceInChain balance:")
+      print("  btc: %f" % btc)
+      print("  dsh: %f" % dsh)
+      print("  eur: %f" % eur)
+
+    return btc
+
+
+  def PlotInterCurrencyChain(self):
+
+    self.BuildPriceDict("dsh_btc")
+    self.BuildPriceDict("dsh_eur")
+    self.BuildPriceDict("btc_eur")
+
+
+    return (list(map(lambda v:v[0], self.__L)), 
+            list(map(lambda v:self.GetPriceInChain(v[2]['tid'], 1.0), self.__L)))
+
 
   # Tuple in MMList: [ts, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
+  # now in MyH (MyAlgos) as a static function
   def _unused_BuildMinMaxList2(self, PriceList, winsize, Debug=False):
 
     L=PriceList #self.GetPriceList(couple)
@@ -870,8 +993,31 @@ class MyRich:
 
     #R.PublicTrades("dsh_btc")
 
-    self.LoadList(week=12)
+    self.LoadList()
+    #self.RecPublicTrades("dsh_btc", limit=10)
+    #self.RecPublicTrades("dsh_eur", limit=10)
+    #self.RecPublicTrades("btc_eur", limit=10)
+ 
+    self.BuildPriceDict("dsh_btc")
+    self.BuildPriceDict("dsh_eur")
+    self.BuildPriceDict("btc_eur")
+   
+    lenL = len(self.__L) 
+    tid=self.__L[int(lenL/2)][2]['tid']
+    print("tid %d" % tid)
 
+    v = self.__GetPriceTuple(tid, "dsh_eur")
+
+    print("next dsh_eur: %s" % str(v))
+
+    #print("price in chain: %f" % self.GetPriceInChain(tid, 1.0))
+
+    for v in self.__L:
+      print(self.GetPriceInChain(v[2]['tid'], 1.0))
+
+    return
+
+    return
     #self.RecPublicTrades("dsh_btc", 10)
     #self.RecPublicTrades("dsh_eur", 2000)
 

@@ -339,7 +339,23 @@ class MyTrade:
     #for o in self.__O:
     #  print("  "+str(o))
 
-    
+  # dsh_btc -> (dsh, btc)
+  # Usage (buy):
+  #   (amount, price) = CalcTrading(0.05, 1.0) # (btc/dsh, dsh) for couple=dsh_btc
+  #   fund_btc += price (negative)
+  #   fund_dsh += amount
+  # Usage (sell)
+  #   (amount, price) = CalcTrading(0.05, -1.0) # (btc/dsh, dsh) for couple=dsh_btc
+  #   fund_btc += price (positive)
+  #   fund_dsh += amount
+  def CalcTrading1(price, amount1):
+    sell_price = amount1*price
+    return (amount1, -sell_price)
+
+  def CalcTrading2(price, amount2):
+    buy_price = amount2/price
+    return (buy_price, -amount2)
+
   # PlaceOrder(0.08, 1, "dsh_btc") # buy 1 dsh for 0.08 btc
   def FillOrderAsk(self, price, amount, couple, id='', ts=0):
     cur=couple.split('_')

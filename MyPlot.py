@@ -179,6 +179,15 @@ if mode == "simulate":
   #linesS=ax2.plot(*MMPlot2[2], 'g-')
   ConfigPlot(couple, ax2)
 
+#currency Chain test
+else:
+  P=R.PlotInterCurrencyChain()
+  ax2 = ax.twinx()
+  lines=ax2.plot(*P, 'r-')
+  plt.setp(lines, linewidth=0.5, linestyle='-', alpha=1.0)
+  ConfigPlot(couple, ax2)
+
+
 
 
 #plt.subplot(2,1,1)
