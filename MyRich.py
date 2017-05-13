@@ -47,7 +47,7 @@ class MyRich:
 
   # V01: [ts, couple, {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
   __L  = []   # Trades History
-  __OB = []   # current Orderbook
+  __OB = {}   # current Orderbook: {'asks": [[price, amount],...], 'bids':[[price, amount],...]
   __F = []    # Funds
   __V = 1     # File Version
   __A = None  # MyAlgos
@@ -125,23 +125,18 @@ class MyRich:
 
 
   def RecOrder(self, couple, limit=10):
-    self.__OB = self.__API.get_param3(couple, method='depth', param="limit=%d"%limit)[couple]
+    self.__OB[couple] = self.__API.get_param3(couple, method='depth', param="limit=%d"%limit)[couple]
 
+    Debug=False
 
-    print("Order Book (%s):" % couple)
-#    print(" Asks:")
-#    for a in self.__OB['asks']:
-#      print("  %f (%f)" % (a[0], a[1]))
-#    print(" Bids:")
-#    for a in self.__OB['bids']:
-#      print("  %f (%f)" % (a[0], a[1]))
-     
-    for i in range(limit):
-      a = self.__OB['asks'][i]
-      b = self.__OB['bids'][i]
-      print("  %9f (%9f)" % (a[0], a[1]), end='')
-      print(" - %9f - " % (a[0]-b[0]), end='' )
-      print("  %9f (%9f)" % (b[0], b[1]))
+    if Debug:
+     print("Order Book (%s):" % couple)
+     for i in range(limit):
+       a = self.__OB[couple]['asks'][i]
+       b = self.__OB[couple]['bids'][i]
+       print("  %9f (%9f)" % (a[0], a[1]), end='')
+       print(" - %9f - " % (a[0]-b[0]), end='' )
+       print("  %9f (%9f)" % (b[0], b[1]))
 
 
 
@@ -235,7 +230,6 @@ class MyRich:
   # 2. btc ->(s) eur ->(b) dsh ->(s) btc
  
   def GetPriceInChain(self, tid, btc):
-    Debug=False
 
     (tid_dsh_btc, ts_dsh_btc, p_dsh_btc, a) = self.__GetPriceTuple(tid, "dsh_btc")
     (tid_dsh_eur, ts_dsh_eur, p_dsh_eur, a) = self.__GetPriceTuple(tid, "dsh_eur")
@@ -248,7 +242,11 @@ class MyRich:
     if tid_btc_eur == None:
       return
 
+    return self.GetPriceInChainWPrices(btc, p_dsh_btc, p_dsh_eur, p_btc_eur) 
 
+  def GetPriceInChainWPrices(self, btc, p_dsh_btc, p_dsh_eur, p_btc_eur): 
+
+    Debug=False
     ## buy dsh (ask)
     #btc -= p_dsh_btc*amount # in btc
     #dsh += amount
@@ -292,16 +290,108 @@ class MyRich:
     return btc
 
 
-  def PlotInterCurrencyChain(self):
+  def GetPriceInChainWPricesR(self, btc, p_dsh_btc, p_dsh_eur, p_btc_eur):
+    Debug=False
 
-    self.BuildPriceDict("dsh_btc")
-    self.BuildPriceDict("dsh_eur")
-    self.BuildPriceDict("btc_eur")
+    dsh    = 0.0
+    eur    = 0.0
+   
+    # sell btc    
+    (a_btc, p_eur) = MyTrade.CalcTrading1(p_btc_eur, -btc) 
+    btc += a_btc # 0.025
+    eur += p_eur # 0
+
+    # buy dsh 
+    (a_dsh, p_eur) = MyTrade.CalcTrading2(p_dsh_eur, eur) # dsh_eur = 100
+    dsh += a_dsh # 0
+    eur += p_eur # 25
+
+    # sell dsh 
+    (a_dsh, p_btc) = MyTrade.CalcTrading1(p_dsh_btc, -dsh)  # dsh_btc = 0.08
+    dsh += a_dsh # 0.25
+    btc += p_btc # 0
+
+    if Debug:
+      print("PriceInChain balance:")
+      print("  btc: %f" % btc)
+      print("  dsh: %f" % dsh)
+      print("  eur: %f" % eur)
+
+    return btc
 
 
-    return (list(map(lambda v:v[0], self.__L)), 
-            list(map(lambda v:self.GetPriceInChain(v[2]['tid'], 1.0), self.__L)))
+  # GetPriceInChainWPriceGen("btc_dsh_usd_btc") 
+  def GetPriceInChainWPriceGen(self, chain_str):
+    pass
 
+#    Debug=False
+#
+#    dsh    = 0.0
+#    eur    = 0.0
+#   
+#    # sell btc    
+#    (a_btc, p_eur) = MyTrade.CalcTrading1(p_btc_eur, -btc) 
+#    btc += a_btc # 0.025
+#    eur += p_eur # 0
+#
+#    # buy dsh 
+#    (a_dsh, p_eur) = MyTrade.CalcTrading2(p_dsh_eur, eur) # dsh_eur = 100
+#    dsh += a_dsh # 0
+#    eur += p_eur # 25
+#
+#    # sell dsh 
+#    (a_dsh, p_btc) = MyTrade.CalcTrading1(p_dsh_btc, -dsh)  # dsh_btc = 0.08
+#    dsh += a_dsh # 0.25
+#    btc += p_btc # 0
+#
+#    if Debug:
+#      print("PriceInChain balance:")
+#      print("  btc: %f" % btc)
+#      print("  dsh: %f" % dsh)
+#      print("  eur: %f" % eur)
+#
+#    return btc
+
+
+
+
+
+  def ChainMode(self):
+    Debug=False
+
+    for i in range(10):
+      CurTime=MyTime()
+
+      self.RecOrder("dsh_btc", 1)
+      self.RecOrder("dsh_eur", 1)
+      self.RecOrder("btc_eur", 1)
+
+      btc=1.0
+    
+      #print(str(self.__OB))
+
+      p_dsh_btc = self.__OB['dsh_btc']['asks'][0][0]
+      p_dsh_eur = self.__OB['dsh_eur']['bids'][0][0]
+      p_btc_eur = self.__OB['btc_eur']['asks'][0][0]
+
+      if Debug:
+        print("Using prices:")
+        print("  dsh_btc: %f" % p_dsh_btc)
+        print("  dsh_eur: %f" % p_dsh_eur)
+        print("  btc_eur: %f" % p_btc_eur)
+
+      val=self.GetPriceInChainWPrices(btc, p_dsh_btc, p_dsh_eur, p_btc_eur) 
+      print("%s: btc->dsh->eur->btc: %f" % (CurTime.Str(), val))     
+
+      p_dsh_btc = self.__OB['dsh_btc']['bids'][0][0]
+      p_dsh_eur = self.__OB['dsh_eur']['asks'][0][0]
+      p_btc_eur = self.__OB['btc_eur']['bids'][0][0]
+
+      val=self.GetPriceInChainWPricesR(btc, p_dsh_btc, p_dsh_eur, p_btc_eur) 
+      print("%s: btc->eur->dsh->btc: %f"  % (CurTime.Str(), val))     
+
+
+      time.sleep(5)
 
   # Tuple in MMList: [ts, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   # now in MyH (MyAlgos) as a static function
@@ -344,7 +434,6 @@ class MyRich:
 
      
 ### Simulate Trading functions
-
   # T: MyTrade
   # C: SimuConf
   def SimulateTrading(self, T, C):
@@ -458,6 +547,7 @@ class MyRich:
     TPWSL = self.__A.GetTimePerWinSize()
     return (list(map(lambda v:v[0], TPWSL)), list(map(lambda v:v[1], TPWSL)))
 
+
   # Tuple in MMList: [1490910279, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   def GetMMPlot(self, couple, WinSize, Percentage=False):
     L=MyH.BuildMinMaxList(self.GetPriceList(couple), WinSize)
@@ -470,6 +560,7 @@ class MyRich:
     MaxPlot=(list(map(lambda v:v[0],L)), list(map(lambda v:v[1]['max']*factor,L)))
 
     return MinPlot, MaxPlot
+
  
   def GetMMPlot2(self):
     MML = self.__A.GetMinMaxList()
@@ -479,6 +570,17 @@ class MyRich:
 
     return MinPlot, MaxPlot, SumPlot
  
+
+  def PlotInterCurrencyChain(self):
+    self.BuildPriceDict("dsh_btc")
+    self.BuildPriceDict("dsh_eur")
+    self.BuildPriceDict("btc_eur")
+
+    return (list(map(lambda v:v[0], self.__L)), 
+            list(map(lambda v:self.GetPriceInChain(v[2]['tid'], 1.0), self.__L)))
+
+
+
 ### Crawler
 
   def RecPublicTrades(self, couple, limit=2000):
@@ -1135,7 +1237,7 @@ def main(argv=None):
     attrL=[]
 
     if len(argv) > 1:
-      modes = ["functest", "info", "crawler", "v0to1", "remdupl", "simulate", "simplot" ]
+      modes = ["functest", "info", "crawler", "v0to1", "remdupl", "simulate", "simplot", "chain" ]
       attrs = ["alt", "noalt"]
       (mode,attrL)=R.ParseCmdLineArgs(argv, modes, attrs)
 
@@ -1159,6 +1261,8 @@ def main(argv=None):
       R.RemoveDuplicatesMode(MyRich.week, MyRich.year)
     elif mode == "simulate":
       R.SimulateTradingMode(MyRich.weeks, MyRich.year)
+    elif mode == "chain":
+      R.ChainMode()
     elif mode == "simplot":
       if not R.LoadWeeks(weeks=MyRich.weeks, year=MyRich.year):
         print("exiting")
