@@ -17,7 +17,7 @@
 #trades:api/3
 #1999: {'type': 'ask', 'price': 963.253, 'amount': 0.3754092, 'tid': 95986030, 'timestamp': 1490389511}
 
-import datetime
+import datetime,time
 import json
 import os.path
 import sys
@@ -46,12 +46,13 @@ class MyRich:
   __API = None  # Instance of BTCeAPI
 
   # V01: [ts, couple, {"type": "ask", "price": 83.696, "amount": 0.17413282, "tid": 96247757}]
-  __L = []    # Trades History
+  __L  = []   # Trades History
+  __OB = []   # current Orderbook
   __F = []    # Funds
   __V = 1     # File Version
   __A = None  # MyAlgos
 
-  __L_TID = dict() # dict of couples with dicts: __L_TID[couple]: tid: (ts, price, amount)
+  __L_TID = dict() # dict of couples with dicts, sorted by tid: __L_TID[couple]: tid: (ts, price, amount)
 
   __DebugTS=0
   __FromTS=0
@@ -60,7 +61,6 @@ class MyRich:
   __DataPath = "FuncTests/"
   __StartDate = MyTime()
 
-  #__MinMaxL = [] # item: [ts, min, max]
 
   # functions
   def __init__(self, Keys):
@@ -123,7 +123,30 @@ class MyRich:
         print(TransTime.Str(), end='')
         print(Ret[v])
 
-  def PublicTrades(self, couple):
+
+  def RecOrder(self, couple, limit=10):
+    self.__OB = self.__API.get_param3(couple, method='depth', param="limit=%d"%limit)[couple]
+
+
+    print("Order Book (%s):" % couple)
+#    print(" Asks:")
+#    for a in self.__OB['asks']:
+#      print("  %f (%f)" % (a[0], a[1]))
+#    print(" Bids:")
+#    for a in self.__OB['bids']:
+#      print("  %f (%f)" % (a[0], a[1]))
+     
+    for i in range(limit):
+      a = self.__OB['asks'][i]
+      b = self.__OB['bids'][i]
+      print("  %9f (%9f)" % (a[0], a[1]), end='')
+      print(" - %9f - " % (a[0]-b[0]), end='' )
+      print("  %9f (%9f)" % (b[0], b[1]))
+
+
+
+  # we use RecPublicTrades function below
+  def __unused_PublicTrades(self, couple):
     T=self.__API.get_param3(couple, method='trades', param="limit=100")
 
     cnt=0
@@ -983,6 +1006,12 @@ class MyRich:
 
 
   def Test(self):
+
+    for i in range(100):
+      self.RecOrder("dsh_btc", 10)
+      time.sleep(1)
+
+    return
 
     #BeginDay="%.0f" % datetime.datetime(2017,3,15).timestamp()
     #EndDay  ="%.0f" % datetime.datetime(2017,3,17).timestamp()
