@@ -348,10 +348,13 @@ class MyTrade:
   #   (amount, price) = CalcTrading(0.05, -1.0) # (btc/dsh, dsh) for couple=dsh_btc
   #   fund_btc += price (positive)
   #   fund_dsh += amount
+
+  # variant for first currency in couple
   def CalcTrading1(price, amount1):
     sell_price = amount1*price
     return (amount1, -sell_price)
 
+  # variant for second currency in couple
   def CalcTrading2(price, amount2):
     buy_price = amount2/price
     return (buy_price, -amount2)

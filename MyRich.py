@@ -54,6 +54,16 @@ class MyRich:
 
   __L_TID = dict() # dict of couples with dicts, sorted by tid: __L_TID[couple]: tid: (ts, price, amount)
 
+  __AvailCouples = [ "dsh_btc",
+                     "dsh_eur", 
+                     "dsh_usd",
+                     "btc_usd",
+                     "btc_eur",
+                     "eth_btc",
+                     "eth_eur",
+                     "eth_usd" ]
+
+
   __DebugTS=0
   __FromTS=0
   __ToTS=0
@@ -321,8 +331,57 @@ class MyRich:
 
 
   # GetPriceInChainWPriceGen("btc_dsh_usd_btc") 
-  def GetPriceInChainWPriceGen(self, chain_str):
-    pass
+  def GetPriceInChainWPriceGen(self, chain_str, doBuy=False):
+    Chain = chain_str.split('_')
+    
+    Couples = []
+
+    for i in range(len(Chain)-1):
+      print("Checking %s_%s" % (Chain[i], Chain[i+1]))
+      if "%s_%s" % (Chain[i], Chain[i+1]) in self.__AvailCouples:
+        Couples.append((Chain[i], Chain[i+1], False, 
+                        "%s_%s" % (Chain[i], Chain[i+1])))
+      elif "%s_%s" % (Chain[i+1], Chain[i]) in self.__AvailCouples:
+        Couples.append((Chain[i], Chain[i+1], True,
+        "%s_%s" % (Chain[i+1], Chain[i])))
+      else:
+        print("Requsted chain error %s: Couple %s_%s not available" % (chain_str, Chain[i], Chain[i+1]))
+        return
+
+    print("Found Chain:")
+    for c in Couples:
+      print(str(c))
+
+    DoBuy=doBuy
+
+    v = 1.0
+
+    for c in Couples:
+
+      self.RecOrder(c[3], 1)
+      if (not DoBuy and c[2]) or (DoBuy and not c[2]):
+        p = self.__OB[c[3]]['asks'][0][0]
+      else:
+        p = self.__OB[c[3]]['bids'][0][0]
+    
+      if DoBuy:
+        amount=-v
+      else:
+        amount=v
+
+      if c[2]: # reverse
+        (v, v2) = MyTrade.CalcTrading2(p, amount)
+      else:
+        (a1, v) = MyTrade.CalcTrading1(p, amount)
+      
+      if DoBuy:
+        print("Bought amount %f %s for price %f. got %f %s" % 
+              (amount, c[0], p, v, c[1]))
+      else: 
+        print("Sold amount %f %s for price %f. got %f %s" % 
+              (amount, c[0], p, v, c[1]))
+        
+      DoBuy = not DoBuy  
 
 #    Debug=False
 #
@@ -1121,6 +1180,9 @@ class MyRich:
 
 
   def Test(self):
+    self.GetPriceInChainWPriceGen("btc_dsh_eur_btc", False)
+    
+    return
 
     for i in range(100):
       self.RecOrder("dsh_btc", 10)
