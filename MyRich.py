@@ -359,7 +359,8 @@ class MyRich:
   def ChainMode(self):
     Debug=False
 
-    for i in range(10):
+    max_val=0
+    for i in range(20):
       CurTime=MyTime()
 
       self.RecOrder("dsh_btc", 1)
@@ -388,10 +389,22 @@ class MyRich:
       p_btc_eur = self.__OB['btc_eur']['bids'][0][0]
 
       val=self.GetPriceInChainWPricesR(btc, p_dsh_btc, p_dsh_eur, p_btc_eur) 
-      print("%s: btc->eur->dsh->btc: %f"  % (CurTime.Str(), val))     
+      print("%s: btc->eur->dsh->btc: %f"  % (CurTime.Str(), val), end='')
+      if val > 1.0:
+        print(" <---- found")
+        print("Used prices:")
+        print("  dsh_btc: %f" % p_dsh_btc)
+        print("  dsh_eur: %f" % p_dsh_eur)
+        print("  btc_eur: %f" % p_btc_eur)
+      else:
+        print(" ")
 
+      if val > max_val:
+        max_val = val
 
-      time.sleep(5)
+      #time.sleep(5)
+
+    print("Max: %f" % max_val)
 
   # Tuple in MMList: [ts, {'min': 0.074, 'max': 0.07415, 'amount': 6.835143370000001}]
   # now in MyH (MyAlgos) as a static function
